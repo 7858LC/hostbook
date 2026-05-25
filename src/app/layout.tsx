@@ -18,6 +18,10 @@ export const viewport: Viewport = {
 const DEMO_SESSION = {
   user: { name: "Demo User", email: "demo@hostbook.local", image: null },
   expires: "2099-01-01T00:00:00.000Z",
+  spreadsheetId: "__demo__",
+  subscriptionStatus: "trialing" as const,
+  trialEndDate: new Date(Date.now() + 30 * 86400000).toISOString(),
+  accessToken: "",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
