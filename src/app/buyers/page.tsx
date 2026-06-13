@@ -4,7 +4,7 @@ import { nanoid } from "nanoid"
 import { getBuyers, saveBuyer, deleteBuyer } from "@/lib/storage"
 import type { Buyer, TradeType } from "@/types/leads"
 
-const TRADE_TYPES: TradeType[] = ["hvac", "plumbing", "electrical", "general"]
+const TRADE_TYPES: TradeType[] = ["hvac", "plumbing", "electrical", "roofing", "general"]
 const EMPTY = (): Omit<Buyer, "id" | "createdAt" | "totalLeadsClaimed"> => ({
   businessName: "", contactName: "", email: "", phone: "", serviceTypes: [], coverageZips: [], coverageState: "", active: true,
 })

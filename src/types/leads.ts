@@ -1,11 +1,12 @@
-export type TradeType = "hvac" | "plumbing" | "electrical" | "general"
+export type TradeType = "hvac" | "plumbing" | "electrical" | "roofing" | "general"
 export type Urgency = "emergency" | "urgent" | "planned" | "unknown"
 export type LeadStatus = "raw" | "qualified" | "available" | "notified" | "claimed" | "rejected"
 
 export interface TradesLead {
   id: string
   discoveredAt: string
-  platform: "reddit" | "hackernews" | "google" | "other"
+  platform: "reddit" | "hackernews" | "facebook" | "nextdoor" | "google" | "other"
+  groupName?: string
   sourceUrl: string
   rawText: string
   authorHandle?: string

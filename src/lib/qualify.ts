@@ -18,7 +18,7 @@ interface QualResult {
 export async function qualifyLead(lead: TradesLead): Promise<QualResult> {
   if (!process.env.ANTHROPIC_API_KEY) return mockQualify(lead)
 
-  const prompt = `You are a lead qualification expert for a trades lead generation service (HVAC, plumbing, electrical).
+  const prompt = `You are a lead qualification expert for a trades lead generation service (HVAC, plumbing, electrical, roofing).
 
 Analyze this signal and determine if it's a genuine homeowner/renter looking for a trades professional.
 
@@ -27,11 +27,13 @@ Signal text:
 ${lead.rawText}
 """
 
-Source: ${lead.platform} — ${lead.sourceUrl}
+Source: ${lead.platform}${lead.groupName ? ` (${lead.groupName})` : ""} — ${lead.sourceUrl}
+
+Facebook/neighborhood group posts score higher — they are warm referral-style leads.
 
 Respond with a JSON object (no markdown):
 {
-  "tradeType": "hvac" | "plumbing" | "electrical" | "general" | "unknown",
+  "tradeType": "hvac" | "plumbing" | "electrical" | "roofing" | "general" | "unknown",
   "urgency": "emergency" | "urgent" | "planned" | "unknown",
   "location": "city name if mentioned, else null",
   "locationState": "US state abbreviation if mentioned, else null",
@@ -58,8 +60,9 @@ Respond with a JSON object (no markdown):
 
 function mockQualify(lead: TradesLead): QualResult {
   const text = lead.rawText.toLowerCase()
-  const tradeType: TradeType = text.includes("hvac") || text.includes("ac") || text.includes("furnace") || text.includes("heat")
-    ? "hvac" : text.includes("plumb") || text.includes("pipe") || text.includes("toilet") || text.includes("drain")
+  const tradeType: TradeType = text.includes("roof") || text.includes("shingle") || text.includes("gutter") || text.includes("leak") && text.includes("rain")
+    ? "roofing" : text.includes("hvac") || text.includes(" ac ") || text.includes("furnace") || text.includes("heat pump") || text.includes("air condition")
+    ? "hvac" : text.includes("plumb") || text.includes("pipe") || text.includes("toilet") || text.includes("drain") || text.includes("water heater")
     ? "plumbing" : text.includes("electr") || text.includes("outlet") || text.includes("circuit") || text.includes("wiring")
     ? "electrical" : "general"
   const urgency: Urgency = text.includes("emergency") || text.includes("burst") || text.includes("flood") || text.includes("no power")

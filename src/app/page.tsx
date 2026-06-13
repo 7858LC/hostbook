@@ -8,7 +8,10 @@ export default function Dashboard() {
   const [leads, setLeads] = useState<TradesLead[]>([])
   const [buyers, setBuyers] = useState<Buyer[]>([])
   const [scanning, setScanning] = useState(false)
+  const [scanningFb, setScanningFb] = useState(false)
   const [scanResult, setScanResult] = useState<string>("")
+  const [fbGroups, setFbGroups] = useState("")
+  const [showFbInput, setShowFbInput] = useState(false)
 
   useEffect(() => {
     void getLeads().then(setLeads)
@@ -20,10 +23,24 @@ export default function Dashboard() {
     try {
       const res = await fetch("/api/scan", { method: "POST" })
       const data = await res.json() as { scanned: number; new: number; qualified: number }
-      setScanResult(`Found ${data.scanned} signals → ${data.new} new → ${data.qualified} qualified`)
+      setScanResult(`Reddit/HN: found ${data.scanned} signals → ${data.new} new → ${data.qualified} qualified`)
       setLeads(await getLeads())
     } catch (e) { setScanResult(String(e)) }
     finally { setScanning(false) }
+  }
+
+  async function runFbScan() {
+    const urls = fbGroups.split(/[\n,]+/).map(u => u.trim()).filter(Boolean)
+    if (!urls.length) return alert("Paste at least one Facebook group URL")
+    setScanningFb(true); setScanResult("")
+    try {
+      const res = await fetch("/api/scan-fb", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ groupUrls: urls }) })
+      const data = await res.json() as { totalPosts: number; tradesPosts: number; new: number; qualified: number; error?: string }
+      if (data.error) throw new Error(data.error)
+      setScanResult(`Facebook: scanned ${data.totalPosts} posts → ${data.tradesPosts} trades-related → ${data.qualified} qualified`)
+      setLeads(await getLeads())
+    } catch (e) { setScanResult(String(e)) }
+    finally { setScanningFb(false) }
   }
 
   const byStatus = {
@@ -44,10 +61,25 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold">LeadFlow</h1>
           <p className="text-sm text-[#a3a3a3] mt-0.5">Trades lead marketplace — HVAC · Plumbing · Electrical</p>
         </div>
-        <button onClick={() => void runScan()} disabled={scanning} className="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-500 disabled:opacity-50 transition-colors">
-          {scanning ? "Scanning…" : "Run Scan"}
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => void runScan()} disabled={scanning} className="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-500 disabled:opacity-50 transition-colors">
+            {scanning ? "Scanning…" : "Scan Reddit/HN"}
+          </button>
+          <button onClick={() => setShowFbInput(v => !v)} className="px-4 py-2 bg-blue-700 text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
+            Scan FB Groups
+          </button>
+        </div>
       </div>
+
+      {showFbInput && (
+        <div className="bg-[#111] border border-blue-900/50 rounded-xl p-4 space-y-3">
+          <p className="text-xs text-[#a3a3a3]">Paste Facebook neighborhood/community group URLs (one per line). Requires <code className="text-blue-400">APIFY_API_TOKEN</code> env var.</p>
+          <textarea value={fbGroups} onChange={e => setFbGroups(e.target.value)} placeholder={"https://www.facebook.com/groups/atlantaneighbors\nhttps://www.facebook.com/groups/..."} rows={3} className="w-full px-3 py-2 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg text-sm text-[#f5f5f5] placeholder-[#525252] outline-none focus:border-blue-500 resize-none font-mono text-xs" />
+          <button onClick={() => void runFbScan()} disabled={scanningFb} className="px-4 py-2 bg-blue-700 text-white text-sm font-semibold rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors">
+            {scanningFb ? "Scanning… (up to 90s)" : "Run Facebook Scan"}
+          </button>
+        </div>
+      )}
 
       {scanResult && <div className="bg-emerald-900/30 border border-emerald-800 rounded-xl px-4 py-3 text-sm text-emerald-300">{scanResult}</div>}
 
