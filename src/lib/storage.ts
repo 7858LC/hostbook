@@ -1,4 +1,3 @@
-"use client"
 import type { TradesLead, Buyer } from "@/types/leads"
 import { supabase } from "./supabase"
 
