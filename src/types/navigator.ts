@@ -1,4 +1,4 @@
-export type Platform = "linkedin" | "reddit" | "google" | "twitter" | "facebook"
+export type Platform = "linkedin" | "reddit" | "google" | "hackernews" | "twitter" | "facebook"
 
 export interface ICP {
   id: string

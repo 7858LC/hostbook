@@ -5,7 +5,7 @@ import { getCampaigns, saveCampaign, deleteCampaign, getICPs, getProducts } from
 import { TagInput } from "@/components/TagInput"
 import type { Campaign, ICP, Product, Platform } from "@/types/navigator"
 
-const PLATFORMS: Platform[] = ["linkedin", "reddit", "google", "twitter", "facebook"]
+const PLATFORMS: Platform[] = ["reddit", "hackernews", "google", "linkedin", "twitter", "facebook"]
 const EMPTY = (): Omit<Campaign, "id" | "createdAt" | "stats"> => ({
   name: "", icpId: "", productId: "", status: "draft",
   platforms: ["reddit", "google"], customQueries: [],

@@ -1,19 +1,44 @@
 import type { Platform, ICP, Campaign, ScanResult, Lead } from "@/types/navigator"
 
 async function scanGoogle(query: string, limit = 10): Promise<ScanResult[]> {
-  const apiKey = process.env.SERP_API_KEY
-  if (!apiKey) return mockResults("google", query, limit)
-  const res = await fetch(`https://serpapi.com/search?engine=google&q=${encodeURIComponent(query)}&num=${limit}&api_key=${apiKey}`, { cache: "no-store" })
-  if (!res.ok) return mockResults("google", query, limit)
-  const data = await res.json() as { organic_results?: { link: string; title: string; snippet: string }[] }
-  return (data.organic_results ?? []).slice(0, limit).map(r => ({ url: r.link, title: r.title, snippet: r.snippet, platform: "google" as Platform }))
+  const cseKey = process.env.GOOGLE_API_KEY
+  const cseId = process.env.GOOGLE_CSE_ID
+  if (cseKey && cseId) {
+    const res = await fetch(`https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${cseKey}&cx=${cseId}&num=${Math.min(limit, 10)}`, { cache: "no-store" }).catch(() => null)
+    if (res?.ok) {
+      const data = await res.json() as { items?: { link: string; title: string; snippet: string }[] }
+      if (data.items?.length) return data.items.slice(0, limit).map(r => ({ url: r.link, title: r.title, snippet: r.snippet, platform: "google" as Platform }))
+    }
+  }
+  const serpKey = process.env.SERP_API_KEY
+  if (serpKey) {
+    const res = await fetch(`https://serpapi.com/search?engine=google&q=${encodeURIComponent(query)}&num=${limit}&api_key=${serpKey}`, { cache: "no-store" }).catch(() => null)
+    if (res?.ok) {
+      const data = await res.json() as { organic_results?: { link: string; title: string; snippet: string }[] }
+      if (data.organic_results?.length) return data.organic_results.slice(0, limit).map(r => ({ url: r.link, title: r.title, snippet: r.snippet, platform: "google" as Platform }))
+    }
+  }
+  return mockResults("google", query, limit)
+}
+
+async function scanHackerNews(query: string, limit = 10): Promise<ScanResult[]> {
+  const res = await fetch(`https://hn.algolia.com/api/v1/search?query=${encodeURIComponent(query)}&tags=story&hitsPerPage=${limit}`, { cache: "no-store" }).catch(() => null)
+  if (!res?.ok) return mockResults("hackernews", query, limit)
+  const data = await res.json() as { hits?: { objectID: string; title: string; url?: string; story_text?: string; author: string; points: number; num_comments: number }[] }
+  return (data.hits ?? []).slice(0, limit).map(h => ({
+    url: h.url ?? `https://news.ycombinator.com/item?id=${h.objectID}`,
+    title: h.title,
+    snippet: (h.story_text ?? "").replace(/<[^>]+>/g, "").slice(0, 400),
+    platform: "hackernews" as Platform,
+    metadata: { author: h.author, upvotes: h.points },
+  }))
 }
 
 async function scanLinkedIn(query: string, limit = 10): Promise<ScanResult[]> {
-  const apiKey = process.env.SERP_API_KEY
-  if (!apiKey) return mockResults("linkedin", query, limit)
-  const res = await fetch(`https://serpapi.com/search?engine=google&q=${encodeURIComponent(`site:linkedin.com/in ${query}`)}&num=${limit}&api_key=${apiKey}`, { cache: "no-store" })
-  if (!res.ok) return mockResults("linkedin", query, limit)
+  const serpKey = process.env.SERP_API_KEY
+  if (!serpKey) return mockResults("linkedin", query, limit)
+  const res = await fetch(`https://serpapi.com/search?engine=google&q=${encodeURIComponent(`site:linkedin.com/in ${query}`)}&num=${limit}&api_key=${serpKey}`, { cache: "no-store" }).catch(() => null)
+  if (!res?.ok) return mockResults("linkedin", query, limit)
   const data = await res.json() as { organic_results?: { link: string; title: string; snippet: string }[] }
   return (data.organic_results ?? []).slice(0, limit).map(r => ({ url: r.link, title: r.title, snippet: r.snippet, platform: "linkedin" as Platform }))
 }
@@ -41,6 +66,11 @@ function mockResults(platform: Platform, query: string, count: number): ScanResu
       { url: "https://google.com/example2", title: "How we solved this and cut costs 40%", snippet: `After struggling with ${query} for months we finally found a workflow. Here is what we did.`, platform: "google" },
       { url: "https://google.com/example3", title: "Best tools for this problem in 2024", snippet: `Comparing the top solutions for ${query}. We evaluated 12 options and narrowed it down.`, platform: "google" },
     ],
+    hackernews: [
+      { url: "https://news.ycombinator.com/item?id=1", title: `Ask HN: Best tools for ${query}?`, snippet: `We are a small team dealing with ${query}. Has anyone found a good solution? Looking for something lightweight.`, platform: "hackernews", metadata: { author: "founder2024", upvotes: 87 } },
+      { url: "https://news.ycombinator.com/item?id=2", title: `Show HN: We built a solution for ${query}`, snippet: `After 6 months of pain with ${query} we built our own tool. Happy to share what we learned.`, platform: "hackernews", metadata: { author: "techbuilder", upvotes: 143 } },
+      { url: "https://news.ycombinator.com/item?id=3", title: `${query} — what are you using in 2024?`, snippet: `Curious what the HN community uses for ${query}. We have outgrown our current stack.`, platform: "hackernews", metadata: { author: "yc_founder", upvotes: 56 } },
+    ],
     linkedin: [
       { url: "https://linkedin.com/in/example1", title: "Sarah Chen • VP Operations", snippet: `Exploring solutions for ${query}. We are a 50-person B2B SaaS company looking to streamline. Open to conversations.`, platform: "linkedin", metadata: { title: "VP Operations", company: "TechCorp" } },
       { url: "https://linkedin.com/in/example2", title: "Mike Johnson • Founder", snippet: `Building a team to tackle ${query}. Currently evaluating tools. Would love to connect with others in this space.`, platform: "linkedin", metadata: { title: "Founder", company: "GrowthCo" } },
@@ -65,6 +95,7 @@ function mockResults(platform: Platform, query: string, count: number): ScanResu
 export function buildQueries(icp: ICP, platform: Platform, customQueries: string[]): string[] {
   const queries = [...icp.where.searchQueries.slice(0, 3), ...customQueries.slice(0, 2), ...icp.where.keywords.slice(0, 2)]
   if (platform === "reddit") queries.push(...icp.why.painPoints.slice(0, 2).map(p => `${p} help`))
+  if (platform === "hackernews") queries.push(...icp.why.painPoints.slice(0, 2).map(p => `Ask HN ${p}`))
   if (platform === "linkedin") queries.push(...icp.who.jobTitles.slice(0, 2).map(t => `${t} ${icp.who.industries[0] ?? ""}`))
   return Array.from(new Set(queries)).slice(0, 5)
 }
@@ -72,6 +103,7 @@ export function buildQueries(icp: ICP, platform: Platform, customQueries: string
 export async function scanPlatform(platform: Platform, query: string, icp: ICP): Promise<ScanResult[]> {
   switch (platform) {
     case "google": return scanGoogle(query)
+    case "hackernews": return scanHackerNews(query)
     case "linkedin": return scanLinkedIn(query)
     case "reddit": return scanReddit(query, icp.where.subreddits)
     default: return mockResults(platform, query, 6)

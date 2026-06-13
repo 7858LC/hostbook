@@ -5,7 +5,9 @@ import { getICPs, saveICP, deleteICP } from "@/lib/storage"
 import { TagInput } from "@/components/TagInput"
 import type { ICP, Platform } from "@/types/navigator"
 
-const PLATFORMS: Platform[] = ["linkedin", "reddit", "google", "twitter", "facebook"]
+const PLATFORMS: Platform[] = ["reddit", "hackernews", "google", "linkedin", "twitter", "facebook"]
+
+const CLERGY_SUBREDDITS = ["pastors", "Christianity", "churchleaders", "Reformed", "Catholicism", "UnitedMethodist", "Baptist", "Anglican", "seminary", "ministry"]
 const EMPTY = (): Omit<ICP, "id" | "createdAt" | "updatedAt"> => ({
   name: "", description: "",
   who: { industries: [], jobTitles: [], companySizes: [], locations: [] },
@@ -123,7 +125,13 @@ export default function ICPPage() {
                 ))}
               </div>
             </F>
-            <F label="Subreddits" hint="Without r/ prefix"><TagInput value={form.where.subreddits ?? []} onChange={v => upd("where", "subreddits", v)} placeholder="startups, SaaS…" /></F>
+            <F label="Subreddits" hint="Without r/ prefix">
+              <TagInput value={form.where.subreddits ?? []} onChange={v => upd("where", "subreddits", v)} placeholder="startups, SaaS…" />
+              <div className="mt-1.5">
+                <p className="text-[9px] text-[#525252] mb-1">Quick add — Ministry/Clergy:</p>
+                <div className="flex flex-wrap gap-1">{CLERGY_SUBREDDITS.map(s => <button key={s} type="button" onClick={() => { const cur = form.where.subreddits ?? []; if (!cur.includes(s)) upd("where", "subreddits", [...cur, s]) }} className="px-1.5 py-0.5 text-[9px] bg-[#1a1a1a] border border-[#2a2a2a] text-[#525252] rounded hover:text-ocean hover:border-ocean transition-colors">+{s}</button>)}</div>
+              </div>
+            </F>
             <F label="Keywords"><TagInput value={form.where.keywords} onChange={v => upd("where", "keywords", v)} placeholder="lead gen, CRM…" /></F>
             <F label="Custom Search Queries"><TagInput value={form.where.searchQueries} onChange={v => upd("where", "searchQueries", v)} placeholder="looking for CRM reddit…" /></F>
           </S>
