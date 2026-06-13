@@ -11,9 +11,10 @@ const PRIMARY = [
 ];
 
 const MORE = [
-  { href: "/reports",  label: "Reports" },
-  { href: "/tax",      label: "Tax" },
-  { href: "/settings", label: "Settings" },
+  { href: "/reports",    label: "Reports" },
+  { href: "/tax",        label: "Tax" },
+  { href: "/navigator",  label: "Navigator" },
+  { href: "/settings",   label: "Settings" },
 ];
 
 export function BottomNav() {

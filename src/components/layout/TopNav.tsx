@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: "/expenses", label: "Expenses" },
   { href: "/reports", label: "Reports" },
   { href: "/tax", label: "Tax" },
+  { href: "/navigator", label: "Navigator" },
 ];
 
 export function TopNav() {
