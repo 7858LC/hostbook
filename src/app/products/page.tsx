@@ -14,18 +14,18 @@ export default function ProductsPage() {
   const [form, setForm] = useState(EMPTY())
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => { setProducts(getProducts()); setICPs(getICPs()) }, [])
+  useEffect(() => { void getProducts().then(setProducts); void getICPs().then(setICPs) }, [])
 
   function select(p: Product) { setSelected(p); setForm({ name: p.name, type: p.type, description: p.description, valueProposition: p.valueProposition, keyBenefits: [...p.keyBenefits], targetICPIds: [...p.targetICPIds], pricing: { ...p.pricing }, uniqueSellingPoints: [...p.uniqueSellingPoints], targetProblems: [...p.targetProblems] }) }
   function reset() { setSelected(null); setForm(EMPTY()) }
 
-  function save() {
+  async function save() {
     if (!form.name || !form.valueProposition) return alert("Name and value proposition required")
     setSaving(true)
     const p: Product = { ...form, id: selected?.id ?? nanoid(10), createdAt: selected?.createdAt ?? new Date().toISOString() }
-    saveProduct(p); setProducts(getProducts()); setSelected(p); setSaving(false); alert("Saved!")
+    await saveProduct(p); setProducts(await getProducts()); setSelected(p); setSaving(false); alert("Saved!")
   }
-  function del(id: string) { if (!confirm("Delete?")) return; deleteProduct(id); setProducts(getProducts()); if (selected?.id === id) reset() }
+  async function del(id: string) { if (!confirm("Delete?")) return; await deleteProduct(id); setProducts(await getProducts()); if (selected?.id === id) reset() }
 
   const inp = "w-full px-3 py-2 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg text-sm text-[#f5f5f5] placeholder-[#525252] outline-none focus:border-ocean"
 
@@ -40,7 +40,7 @@ export default function ProductsPage() {
           {products.length === 0 && <p className="text-xs text-[#525252] px-1">No products yet.</p>}
           {products.map(p => (
             <div key={p.id} onClick={() => select(p)} className={`p-3 rounded-xl border cursor-pointer transition-colors ${selected?.id === p.id ? "bg-ocean/10 border-ocean" : "bg-[#111] border-[#1a1a1a] hover:border-[#2a2a2a]"}`}>
-              <div className="flex justify-between"><span className="text-sm font-medium">{p.name}</span><button onClick={e => { e.stopPropagation(); del(p.id) }} className="text-[#525252] hover:text-red-400 text-xs">✕</button></div>
+              <div className="flex justify-between"><span className="text-sm font-medium">{p.name}</span><button onClick={e => { e.stopPropagation(); void del(p.id) }} className="text-[#525252] hover:text-red-400 text-xs">✕</button></div>
               <span className={`text-[9px] px-1.5 py-0.5 rounded mt-1 inline-block ${p.type === "service" ? "bg-purple-900 text-purple-300" : "bg-blue-900 text-blue-300"}`}>{p.type}</span>
               <p className="text-xs text-[#525252] mt-1 line-clamp-2">{p.valueProposition}</p>
             </div>
@@ -77,7 +77,7 @@ export default function ProductsPage() {
             </div>
           </div>
           <div className="flex gap-3">
-            <button onClick={save} disabled={saving} className="px-6 py-2.5 bg-ocean text-white text-sm font-semibold rounded-lg disabled:opacity-50 hover:bg-sky-500 transition-colors">{saving ? "Saving…" : selected ? "Update" : "Save Product"}</button>
+            <button onClick={() => void save()} disabled={saving} className="px-6 py-2.5 bg-ocean text-white text-sm font-semibold rounded-lg disabled:opacity-50 hover:bg-sky-500 transition-colors">{saving ? "Saving…" : selected ? "Update" : "Save Product"}</button>
             {selected && <button onClick={reset} className="px-4 py-2.5 border border-[#2a2a2a] text-[#a3a3a3] text-sm rounded-lg hover:border-[#3a3a3a] transition-colors">+ New</button>}
           </div>
         </div>

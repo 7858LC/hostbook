@@ -1,99 +1,132 @@
 "use client"
-import type { ICNStore, ICP, Product, Campaign, Lead } from "@/types/navigator"
+import type { ICP, Product, Campaign, Lead } from "@/types/navigator"
+import { supabase } from "./supabase"
 
+type Store = { icps: ICP[]; products: Product[]; campaigns: Campaign[]; leads: Lead[] }
 const KEY = "icn_store"
 
-function load(): ICNStore {
+function localLoad(): Store {
   if (typeof window === "undefined") return { icps: [], products: [], campaigns: [], leads: [] }
-  try {
-    const raw = localStorage.getItem(KEY)
-    return raw ? (JSON.parse(raw) as ICNStore) : { icps: [], products: [], campaigns: [], leads: [] }
-  } catch {
-    return { icps: [], products: [], campaigns: [], leads: [] }
-  }
+  try { return JSON.parse(localStorage.getItem(KEY) ?? "{}") as Store } catch { return { icps: [], products: [], campaigns: [], leads: [] } }
 }
-
-function save(store: ICNStore): void {
-  if (typeof window === "undefined") return
-  localStorage.setItem(KEY, JSON.stringify(store))
-}
+function localSave(s: Store) { if (typeof window !== "undefined") localStorage.setItem(KEY, JSON.stringify(s)) }
 
 // ICPs
-export function getICPs(): ICP[] { return load().icps }
-export function saveICP(icp: ICP): ICP {
-  const s = load()
-  const idx = s.icps.findIndex(i => i.id === icp.id)
-  if (idx >= 0) s.icps[idx] = icp; else s.icps.push(icp)
-  save(s); return icp
+export async function getICPs(): Promise<ICP[]> {
+  if (supabase) {
+    const { data } = await supabase.from("icps").select("data")
+    return (data ?? []).map((r: { data: unknown }) => r.data as ICP)
+  }
+  return localLoad().icps ?? []
 }
-export function deleteICP(id: string): void {
-  const s = load(); s.icps = s.icps.filter(i => i.id !== id); save(s)
+export async function saveICP(icp: ICP): Promise<ICP> {
+  if (supabase) { await supabase.from("icps").upsert({ id: icp.id, data: icp }); return icp }
+  const s = localLoad(); const idx = s.icps.findIndex(i => i.id === icp.id)
+  if (idx >= 0) s.icps[idx] = icp; else s.icps.push(icp); localSave(s); return icp
+}
+export async function deleteICP(id: string): Promise<void> {
+  if (supabase) { await supabase.from("icps").delete().eq("id", id); return }
+  const s = localLoad(); s.icps = s.icps.filter(i => i.id !== id); localSave(s)
 }
 
 // Products
-export function getProducts(): Product[] { return load().products }
-export function saveProduct(p: Product): Product {
-  const s = load()
-  const idx = s.products.findIndex(x => x.id === p.id)
-  if (idx >= 0) s.products[idx] = p; else s.products.push(p)
-  save(s); return p
+export async function getProducts(): Promise<Product[]> {
+  if (supabase) {
+    const { data } = await supabase.from("products").select("data")
+    return (data ?? []).map((r: { data: unknown }) => r.data as Product)
+  }
+  return localLoad().products ?? []
 }
-export function deleteProduct(id: string): void {
-  const s = load(); s.products = s.products.filter(p => p.id !== id); save(s)
+export async function saveProduct(p: Product): Promise<Product> {
+  if (supabase) { await supabase.from("products").upsert({ id: p.id, data: p }); return p }
+  const s = localLoad(); const idx = s.products.findIndex(x => x.id === p.id)
+  if (idx >= 0) s.products[idx] = p; else s.products.push(p); localSave(s); return p
+}
+export async function deleteProduct(id: string): Promise<void> {
+  if (supabase) { await supabase.from("products").delete().eq("id", id); return }
+  const s = localLoad(); s.products = s.products.filter(p => p.id !== id); localSave(s)
 }
 
 // Campaigns
-export function getCampaigns(): Campaign[] { return load().campaigns }
-export function saveCampaign(c: Campaign): Campaign {
-  const s = load()
-  const idx = s.campaigns.findIndex(x => x.id === c.id)
-  if (idx >= 0) s.campaigns[idx] = c; else s.campaigns.push(c)
-  save(s); return c
+export async function getCampaigns(): Promise<Campaign[]> {
+  if (supabase) {
+    const { data } = await supabase.from("campaigns").select("data")
+    return (data ?? []).map((r: { data: unknown }) => r.data as Campaign)
+  }
+  return localLoad().campaigns ?? []
 }
-export function deleteCampaign(id: string): void {
-  const s = load(); s.campaigns = s.campaigns.filter(c => c.id !== id); save(s)
+export async function saveCampaign(c: Campaign): Promise<Campaign> {
+  if (supabase) { await supabase.from("campaigns").upsert({ id: c.id, data: c }); return c }
+  const s = localLoad(); const idx = s.campaigns.findIndex(x => x.id === c.id)
+  if (idx >= 0) s.campaigns[idx] = c; else s.campaigns.push(c); localSave(s); return c
 }
-export function updateCampaignStats(id: string, delta: Partial<Campaign["stats"]>): void {
-  const s = load()
-  const c = s.campaigns.find(x => x.id === id)
-  if (!c) return
-  c.stats.discovered += delta.discovered ?? 0
-  c.stats.vetted += delta.vetted ?? 0
-  c.stats.approved += delta.approved ?? 0
-  c.stats.messaged += delta.messaged ?? 0
-  c.stats.responded += delta.responded ?? 0
-  c.stats.converted += delta.converted ?? 0
-  c.lastRunAt = new Date().toISOString()
-  save(s)
+export async function deleteCampaign(id: string): Promise<void> {
+  if (supabase) { await supabase.from("campaigns").delete().eq("id", id); return }
+  const s = localLoad(); s.campaigns = s.campaigns.filter(c => c.id !== id); localSave(s)
+}
+export async function updateCampaignStats(id: string, delta: Partial<Campaign["stats"]>): Promise<void> {
+  if (supabase) {
+    const { data } = await supabase.from("campaigns").select("data").eq("id", id).single()
+    if (!data) return
+    const c = data.data as Campaign
+    c.stats.discovered += delta.discovered ?? 0; c.stats.vetted += delta.vetted ?? 0
+    c.stats.approved += delta.approved ?? 0; c.stats.messaged += delta.messaged ?? 0
+    c.stats.responded += delta.responded ?? 0; c.stats.converted += delta.converted ?? 0
+    c.lastRunAt = new Date().toISOString()
+    await supabase.from("campaigns").update({ data: c }).eq("id", id); return
+  }
+  const s = localLoad(); const c = s.campaigns.find(x => x.id === id); if (!c) return
+  c.stats.discovered += delta.discovered ?? 0; c.stats.vetted += delta.vetted ?? 0
+  c.stats.approved += delta.approved ?? 0; c.stats.messaged += delta.messaged ?? 0
+  c.stats.responded += delta.responded ?? 0; c.stats.converted += delta.converted ?? 0
+  c.lastRunAt = new Date().toISOString(); localSave(s)
 }
 
 // Leads
-export function getLeads(campaignId?: string): Lead[] {
-  const s = load()
+export async function getLeads(campaignId?: string): Promise<Lead[]> {
+  if (supabase) {
+    let q = supabase.from("leads").select("data")
+    if (campaignId) q = q.eq("campaign_id", campaignId)
+    const { data } = await q
+    return (data ?? []).map((r: { data: unknown }) => r.data as Lead)
+  }
+  const s = localLoad()
   return campaignId ? s.leads.filter(l => l.campaignId === campaignId) : s.leads
 }
-export function saveLead(l: Lead): Lead {
-  const s = load()
-  const idx = s.leads.findIndex(x => x.id === l.id)
-  if (idx >= 0) s.leads[idx] = l; else s.leads.push(l)
-  save(s); return l
+export async function saveLead(l: Lead): Promise<Lead> {
+  if (supabase) { await supabase.from("leads").upsert({ id: l.id, campaign_id: l.campaignId, status: l.status, data: l }); return l }
+  const s = localLoad(); const idx = s.leads.findIndex(x => x.id === l.id)
+  if (idx >= 0) s.leads[idx] = l; else s.leads.push(l); localSave(s); return l
 }
-export function saveLeads(leads: Lead[]): void {
-  const s = load()
-  for (const l of leads) {
-    const idx = s.leads.findIndex(x => x.id === l.id)
-    if (idx >= 0) s.leads[idx] = l; else s.leads.push(l)
+export async function saveLeads(leads: Lead[]): Promise<void> {
+  if (supabase) {
+    await supabase.from("leads").upsert(leads.map(l => ({ id: l.id, campaign_id: l.campaignId, status: l.status, data: l }))); return
   }
-  save(s)
+  const s = localLoad()
+  for (const l of leads) { const idx = s.leads.findIndex(x => x.id === l.id); if (idx >= 0) s.leads[idx] = l; else s.leads.push(l) }
+  localSave(s)
 }
-export function deleteLead(id: string): void {
-  const s = load(); s.leads = s.leads.filter(l => l.id !== id); save(s)
+export async function deleteLead(id: string): Promise<void> {
+  if (supabase) { await supabase.from("leads").delete().eq("id", id); return }
+  const s = localLoad(); s.leads = s.leads.filter(l => l.id !== id); localSave(s)
 }
-export function updateLeadStatus(id: string, status: Lead["status"], updates?: Partial<Lead>): Lead | null {
-  const s = load()
-  const l = s.leads.find(x => x.id === id)
-  if (!l) return null
-  Object.assign(l, updates, { status, updatedAt: new Date().toISOString() })
-  save(s); return l
+export async function updateLeadStatus(id: string, status: Lead["status"], updates?: Partial<Lead>): Promise<Lead | null> {
+  if (supabase) {
+    const { data } = await supabase.from("leads").select("data").eq("id", id).single()
+    if (!data) return null
+    const l = { ...(data.data as Lead), ...updates, status, updatedAt: new Date().toISOString() }
+    await supabase.from("leads").update({ status, data: l }).eq("id", id); return l
+  }
+  const s = localLoad(); const l = s.leads.find(x => x.id === id); if (!l) return null
+  Object.assign(l, updates, { status, updatedAt: new Date().toISOString() }); localSave(s); return l
 }
-export function clearAll(): void { save({ icps: [], products: [], campaigns: [], leads: [] }) }
+export async function clearAll(): Promise<void> {
+  if (supabase) {
+    await supabase.from("leads").delete().neq("id", "")
+    await supabase.from("campaigns").delete().neq("id", "")
+    await supabase.from("products").delete().neq("id", "")
+    await supabase.from("icps").delete().neq("id", "")
+    return
+  }
+  localSave({ icps: [], products: [], campaigns: [], leads: [] })
+}

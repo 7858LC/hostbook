@@ -36,7 +36,7 @@ export default function ICPPage() {
   const [form, setForm] = useState(EMPTY())
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => { setICPs(getICPs()) }, [])
+  useEffect(() => { void getICPs().then(setICPs) }, [])
 
   function select(icp: ICP) { setSelected(icp); setForm({ name: icp.name, description: icp.description, who: { ...icp.who }, what: { ...icp.what }, why: { ...icp.why }, when: { ...icp.when }, where: { ...icp.where }, how: { ...icp.how } }) }
   function reset() { setSelected(null); setForm(EMPTY()) }
@@ -44,22 +44,21 @@ export default function ICPPage() {
     setForm(f => ({ ...f, [section]: { ...(f[section] as object), [field]: value } }))
   }
 
-  function save() {
+  async function save() {
     if (!form.name) return alert("Name required")
     setSaving(true)
     const now = new Date().toISOString()
     const icp: ICP = { ...form, id: selected?.id ?? nanoid(10), createdAt: selected?.createdAt ?? now, updatedAt: now }
-    saveICP(icp)
-    const updated = getICPs()
-    setICPs(updated)
+    await saveICP(icp)
+    setICPs(await getICPs())
     setSelected(icp)
     setSaving(false)
     alert("Saved!")
   }
 
-  function del(id: string) {
+  async function del(id: string) {
     if (!confirm("Delete?")) return
-    deleteICP(id); setICPs(getICPs())
+    await deleteICP(id); setICPs(await getICPs())
     if (selected?.id === id) reset()
   }
 
@@ -78,7 +77,7 @@ export default function ICPPage() {
           {icps.map(icp => (
             <div key={icp.id} onClick={() => select(icp)}
               className={`p-3 rounded-xl border cursor-pointer transition-colors ${selected?.id === icp.id ? "bg-ocean/10 border-ocean" : "bg-[#111] border-[#1a1a1a] hover:border-[#2a2a2a]"}`}>
-              <div className="flex justify-between"><span className="text-sm font-medium">{icp.name}</span><button onClick={e => { e.stopPropagation(); del(icp.id) }} className="text-[#525252] hover:text-red-400 text-xs">✕</button></div>
+              <div className="flex justify-between"><span className="text-sm font-medium">{icp.name}</span><button onClick={e => { e.stopPropagation(); void del(icp.id) }} className="text-[#525252] hover:text-red-400 text-xs">✕</button></div>
               <p className="text-xs text-[#525252] mt-0.5 line-clamp-2">{icp.description}</p>
               <div className="flex gap-1 mt-1 flex-wrap">{icp.where.platforms.map(p => <span key={p} className="px-1 py-0.5 text-[9px] bg-[#1a1a1a] text-[#a3a3a3] rounded">{p}</span>)}</div>
             </div>
@@ -146,7 +145,7 @@ export default function ICPPage() {
             <F label="Influencers / Communities"><TagInput value={form.how.influencers} onChange={v => upd("how", "influencers", v)} placeholder="Indie Hackers, PH…" /></F>
           </S>
           <div className="flex gap-3">
-            <button onClick={save} disabled={saving} className="px-6 py-2.5 bg-ocean text-white text-sm font-semibold rounded-lg disabled:opacity-50 hover:bg-sky-500 transition-colors">{saving ? "Saving…" : selected ? "Update ICP" : "Save ICP"}</button>
+            <button onClick={() => void save()} disabled={saving} className="px-6 py-2.5 bg-ocean text-white text-sm font-semibold rounded-lg disabled:opacity-50 hover:bg-sky-500 transition-colors">{saving ? "Saving…" : selected ? "Update ICP" : "Save ICP"}</button>
             {selected && <button onClick={reset} className="px-4 py-2.5 border border-[#2a2a2a] text-[#a3a3a3] text-sm rounded-lg hover:border-[#3a3a3a] transition-colors">+ New</button>}
           </div>
         </div>

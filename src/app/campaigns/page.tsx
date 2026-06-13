@@ -20,21 +20,21 @@ export default function CampaignsPage() {
   const [form, setForm] = useState(EMPTY())
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => { setCampaigns(getCampaigns()); setICPs(getICPs()); setProducts(getProducts()) }, [])
+  useEffect(() => { void getCampaigns().then(setCampaigns); void getICPs().then(setICPs); void getProducts().then(setProducts) }, [])
 
   function select(c: Campaign) { setSelected(c); setForm({ name: c.name, icpId: c.icpId, productId: c.productId, status: c.status, platforms: [...c.platforms], customQueries: [...c.customQueries], settings: { ...c.settings } }) }
   function reset() { setSelected(null); setForm(EMPTY()) }
   function upd(field: keyof ReturnType<typeof EMPTY>, value: unknown) { setForm(f => ({ ...f, [field]: value })) }
   function updS(field: keyof Campaign["settings"], value: unknown) { setForm(f => ({ ...f, settings: { ...f.settings, [field]: value } })) }
 
-  function save() {
+  async function save() {
     if (!form.name || !form.icpId || !form.productId) return alert("Name, ICP and Product required")
     setSaving(true)
     const stats = selected?.stats ?? { discovered: 0, vetted: 0, approved: 0, messaged: 0, responded: 0, converted: 0 }
     const c: Campaign = { ...form, stats, id: selected?.id ?? nanoid(10), createdAt: selected?.createdAt ?? new Date().toISOString() }
-    saveCampaign(c); setCampaigns(getCampaigns()); setSelected(c); setSaving(false); alert("Saved!")
+    await saveCampaign(c); setCampaigns(await getCampaigns()); setSelected(c); setSaving(false); alert("Saved!")
   }
-  function del(id: string) { if (!confirm("Delete?")) return; deleteCampaign(id); setCampaigns(getCampaigns()); if (selected?.id === id) reset() }
+  async function del(id: string) { if (!confirm("Delete?")) return; await deleteCampaign(id); setCampaigns(await getCampaigns()); if (selected?.id === id) reset() }
   function togglePlatform(p: Platform) { const has = form.platforms.includes(p); upd("platforms", has ? form.platforms.filter(x => x !== p) : [...form.platforms, p]) }
 
   const inp = "w-full px-3 py-2 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg text-sm text-[#f5f5f5] placeholder-[#525252] outline-none focus:border-ocean"
@@ -53,7 +53,7 @@ export default function CampaignsPage() {
             return (
               <div key={c.id} onClick={() => select(c)} className={`p-3 rounded-xl border cursor-pointer transition-colors ${selected?.id === c.id ? "bg-ocean/10 border-ocean" : "bg-[#111] border-[#1a1a1a] hover:border-[#2a2a2a]"}`}>
                 <div className="flex justify-between gap-1"><span className="text-sm font-medium">{c.name}</span>
-                  <div className="flex gap-1"><span className={`text-[9px] px-1.5 py-0.5 rounded ${c.status === "active" ? "bg-emerald-900 text-emerald-400" : "bg-[#2a2a2a] text-[#a3a3a3]"}`}>{c.status}</span><button onClick={e => { e.stopPropagation(); del(c.id) }} className="text-[#525252] hover:text-red-400 text-xs">✕</button></div>
+                  <div className="flex gap-1"><span className={`text-[9px] px-1.5 py-0.5 rounded ${c.status === "active" ? "bg-emerald-900 text-emerald-400" : "bg-[#2a2a2a] text-[#a3a3a3]"}`}>{c.status}</span><button onClick={e => { e.stopPropagation(); void del(c.id) }} className="text-[#525252] hover:text-red-400 text-xs">✕</button></div>
                 </div>
                 <p className="text-xs text-[#525252] mt-0.5">{icp?.name ?? "—"} → {product?.name ?? "—"}</p>
                 <div className="flex gap-3 mt-1 text-xs text-[#525252]"><span>{c.stats.discovered} found</span><span>{c.stats.messaged} sent</span></div>
@@ -107,7 +107,7 @@ export default function CampaignsPage() {
             </div>
           )}
           <div className="flex gap-3">
-            <button onClick={save} disabled={saving} className="px-6 py-2.5 bg-ocean text-white text-sm font-semibold rounded-lg disabled:opacity-50 hover:bg-sky-500 transition-colors">{saving ? "Saving…" : selected ? "Update" : "Create Campaign"}</button>
+            <button onClick={() => void save()} disabled={saving} className="px-6 py-2.5 bg-ocean text-white text-sm font-semibold rounded-lg disabled:opacity-50 hover:bg-sky-500 transition-colors">{saving ? "Saving…" : selected ? "Update" : "Create Campaign"}</button>
             {selected && <button onClick={reset} className="px-4 py-2.5 border border-[#2a2a2a] text-[#a3a3a3] text-sm rounded-lg hover:border-[#3a3a3a] transition-colors">+ New</button>}
           </div>
         </div>

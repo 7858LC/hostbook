@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState, useCallback, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { getLeads, saveLeads, updateLeadStatus, deleteLead, getCampaigns, getICPs, getProducts } from "@/lib/storage"
+import { getLeads, saveLeads, updateLeadStatus, getCampaigns, getICPs, getProducts } from "@/lib/storage"
 import type { Lead, LeadStatus, Campaign, ICP, Product } from "@/types/navigator"
 
 const COLS: { status: LeadStatus; label: string; color: string }[] = [
@@ -59,11 +59,18 @@ function LeadsContent() {
   const [camId, setCamId] = useState(cFilter)
   const [running, setRunning] = useState(false)
   const [msgLead, setMsgLead] = useState<Lead | null>(null)
+  const [emailTo, setEmailTo] = useState("")
+  const [sendingEmail, setSendingEmail] = useState(false)
 
-  const reload = useCallback(() => { setLeads(getLeads(camId || undefined)) }, [camId])
-  useEffect(() => { reload(); setCampaigns(getCampaigns()); setICPs(getICPs()); setProducts(getProducts()) }, [reload])
+  const reload = useCallback(async () => { setLeads(await getLeads(camId || undefined)) }, [camId])
+  useEffect(() => {
+    void reload()
+    void getCampaigns().then(setCampaigns)
+    void getICPs().then(setICPs)
+    void getProducts().then(setProducts)
+  }, [reload])
 
-  function updStatus(id: string, s: LeadStatus) { updateLeadStatus(id, s); reload() }
+  async function updStatus(id: string, s: LeadStatus) { await updateLeadStatus(id, s); await reload() }
 
   async function runPipeline(action: "analyze" | "generate_messages" | "autopilot") {
     const campaign = campaigns.find(c => c.id === camId)
@@ -76,7 +83,7 @@ function LeadsContent() {
     try {
       const res = await fetch("/api/pipeline", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, leads: toProcess, icp, product, campaign }) })
       const { leads: updated } = await res.json() as { leads: Lead[] }
-      saveLeads(updated); reload()
+      await saveLeads(updated); await reload()
       alert(`Done! Processed ${updated.length} leads.`)
     } catch (e) { alert(String(e)) }
     finally { setRunning(false) }
@@ -90,10 +97,33 @@ function LeadsContent() {
     try {
       const res = await fetch("/api/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaign, icp }) })
       const { leads: newLeads } = await res.json() as { leads: Lead[] }
-      saveLeads(newLeads); reload()
+      await saveLeads(newLeads); await reload()
       alert(`Discovered ${newLeads.length} new leads!`)
     } catch (e) { alert(String(e)) }
     finally { setRunning(false) }
+  }
+
+  async function sendEmail() {
+    if (!msgLead || !emailTo) return
+    setSendingEmail(true)
+    try {
+      const res = await fetch("/api/send-outreach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: emailTo,
+          subject: `Reaching out${msgLead.name ? ` — ${msgLead.name}` : ""}`,
+          message: msgLead.generatedMessage ?? "",
+        }),
+      })
+      const json = await res.json() as { sent?: boolean; error?: string }
+      if (!res.ok || !json.sent) throw new Error(json.error ?? "Send failed")
+      await updateLeadStatus(msgLead.id, "messaged", { email: emailTo, sentChannel: "email", sentAt: new Date().toISOString() })
+      await reload()
+      setMsgLead(null); setEmailTo("")
+      alert("Sent! Lead marked as Messaged.")
+    } catch (e) { alert(String(e)) }
+    finally { setSendingEmail(false) }
   }
 
   const byStatus = Object.fromEntries(COLS.map(c => [c.status, leads.filter(l => l.status === c.status)])) as Record<LeadStatus, Lead[]>
@@ -123,22 +153,35 @@ function LeadsContent() {
                 <span className="text-xs text-[#525252] bg-[#1a1a1a] px-1.5 rounded">{byStatus[col.status]?.length ?? 0}</span>
               </div>
               <div className="space-y-2">
-                {(byStatus[col.status] ?? []).slice(0, 12).map(l => <LeadCard key={l.id} lead={l} onStatus={updStatus} onMessage={setMsgLead} />)}
+                {(byStatus[col.status] ?? []).slice(0, 12).map(l => <LeadCard key={l.id} lead={l} onStatus={(id, s) => void updStatus(id, s)} onMessage={setMsgLead} />)}
               </div>
             </div>
           ))}
         </div>
       )}
       {msgLead && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={() => setMsgLead(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={() => { setMsgLead(null); setEmailTo("") }}>
           <div className="bg-[#111] border border-[#2a2a2a] rounded-2xl p-6 max-w-lg w-full" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between mb-4">
               <div><h3 className="font-semibold">Generated Message</h3>{msgLead.name && <p className="text-xs text-[#a3a3a3]">To: {msgLead.name}{msgLead.company ? ` @ ${msgLead.company}` : ""}</p>}</div>
-              <button onClick={() => setMsgLead(null)} className="text-[#525252] hover:text-[#f5f5f5] text-xl">×</button>
+              <button onClick={() => { setMsgLead(null); setEmailTo("") }} className="text-[#525252] hover:text-[#f5f5f5] text-xl">×</button>
             </div>
-            <div className="bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl p-4 text-sm whitespace-pre-wrap mb-4">{msgLead.generatedMessage}</div>
-            {msgLead.messagePersonalizationNotes && <p className="text-xs text-[#525252] mb-4"><span className="text-[#a3a3a3]">Personalization: </span>{msgLead.messagePersonalizationNotes}</p>}
-            <button onClick={() => { void navigator.clipboard.writeText(msgLead.generatedMessage ?? ""); alert("Copied!") }} className="w-full py-2 text-sm bg-ocean text-white rounded-lg hover:bg-sky-500 font-semibold">Copy Message</button>
+            <div className="bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl p-4 text-sm whitespace-pre-wrap mb-4 max-h-48 overflow-y-auto">{msgLead.generatedMessage}</div>
+            {msgLead.messagePersonalizationNotes && <p className="text-xs text-[#525252] mb-4"><span className="text-[#a3a3a3]">Notes: </span>{msgLead.messagePersonalizationNotes}</p>}
+            <div className="border-t border-[#1a1a1a] pt-4 space-y-2">
+              <p className="text-xs text-[#a3a3a3] font-medium">Send via Email</p>
+              <input
+                type="email"
+                value={emailTo}
+                onChange={e => setEmailTo(e.target.value)}
+                placeholder="recipient@email.com"
+                className="w-full px-3 py-2 bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg text-xs text-[#f5f5f5] placeholder-[#525252] outline-none focus:border-ocean"
+              />
+              <div className="flex gap-2">
+                <button onClick={() => { void navigator.clipboard.writeText(msgLead.generatedMessage ?? ""); alert("Copied!") }} className="flex-1 py-2 text-sm bg-[#1a1a1a] border border-[#2a2a2a] text-[#a3a3a3] rounded-lg hover:border-[#3a3a3a] font-semibold">Copy</button>
+                <button onClick={() => void sendEmail()} disabled={!emailTo || sendingEmail} className="flex-1 py-2 text-sm bg-ocean text-white rounded-lg hover:bg-sky-500 font-semibold disabled:opacity-40">{sendingEmail ? "Sending…" : "Send Email"}</button>
+              </div>
+            </div>
           </div>
         </div>
       )}

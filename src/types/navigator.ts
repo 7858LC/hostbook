@@ -58,6 +58,7 @@ export interface Lead {
   name?: string
   title?: string
   company?: string
+  email?: string
   bio?: string
   profileUrl?: string
   signalText: string

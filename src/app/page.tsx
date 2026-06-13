@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { getCampaigns, getICPs, getProducts, getLeads } from "@/lib/storage"
+import { getCampaigns, getICPs, getProducts, getLeads, saveLeads, updateCampaignStats } from "@/lib/storage"
 import type { Campaign, ICP, Product, Lead } from "@/types/navigator"
 
 export default function Dashboard() {
@@ -12,10 +12,10 @@ export default function Dashboard() {
   const [running, setRunning] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
-    setCampaigns(getCampaigns())
-    setICPs(getICPs())
-    setProducts(getProducts())
-    setLeads(getLeads())
+    void getCampaigns().then(setCampaigns)
+    void getICPs().then(setICPs)
+    void getProducts().then(setProducts)
+    void getLeads().then(setLeads)
   }, [])
 
   const stats = {
@@ -36,15 +36,13 @@ export default function Dashboard() {
     try {
       const scanRes = await fetch("/api/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaign, icp }) })
       const { leads: newLeads } = await scanRes.json() as { leads: Lead[] }
-      const { saveLeads, updateCampaignStats } = await import("@/lib/storage")
-      saveLeads(newLeads)
+      await saveLeads(newLeads)
       const pipeRes = await fetch("/api/pipeline", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "autopilot", leads: newLeads, icp, product, campaign }) })
       const { leads: processed } = await pipeRes.json() as { leads: Lead[] }
-      saveLeads(processed)
-      updateCampaignStats(campaign.id, { discovered: newLeads.length, vetted: processed.filter(l => l.status !== "rejected" && l.status !== "new").length, messaged: processed.filter(l => l.status === "messaged").length })
-      const updated = getLeads()
-      setLeads(updated)
-      setCampaigns(getCampaigns())
+      await saveLeads(processed)
+      await updateCampaignStats(campaign.id, { discovered: newLeads.length, vetted: processed.filter(l => l.status !== "rejected" && l.status !== "new").length, messaged: processed.filter(l => l.status === "messaged").length })
+      setLeads(await getLeads())
+      setCampaigns(await getCampaigns())
       alert(`Done! Discovered ${newLeads.length} leads, messaged ${processed.filter(l => l.status === "messaged").length}.`)
     } catch (e) { alert(String(e)) }
     finally { setRunning(r => ({ ...r, [campaign.id]: false })) }
