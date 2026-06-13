@@ -1,6 +1,15 @@
 export type TradeType = "hvac" | "plumbing" | "electrical" | "roofing" | "general"
 export type Urgency = "emergency" | "urgent" | "planned" | "unknown"
-export type LeadStatus = "raw" | "qualified" | "available" | "notified" | "claimed" | "rejected"
+export type LeadStatus =
+  | "raw"
+  | "qualified"
+  | "outreach_sent"
+  | "intake_received"
+  | "available"
+  | "notified"
+  | "claimed"
+  | "rejected"
+  | "expired"
 
 export interface TradesLead {
   id: string
@@ -18,6 +27,15 @@ export interface TradesLead {
   qualityScore: number
   estimatedValue: number
   status: LeadStatus
+  // Outreach + intake
+  outreachSentAt?: string
+  homeownerName?: string
+  homeownerPhone?: string
+  // Cascade
+  cascadePosition?: number
+  cascadeBuyerIds?: string[]
+  cascadeNotifiedAt?: string
+  // Claim
   claimedBy?: string
   claimedAt?: string
   stripeSessionId?: string

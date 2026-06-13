@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { getLeads, updateLeadStatus } from "@/lib/storage"
+import { getOutreachMessage } from "@/lib/outreach"
 import type { TradesLead } from "@/types/leads"
 
 const URGENCY_COLOR: Record<string, string> = {
@@ -11,12 +12,51 @@ const URGENCY_COLOR: Record<string, string> = {
   unknown: "text-[#525252] bg-[#1a1a1a]",
 }
 
-const STATUS_TABS = ["all", "qualified", "available", "notified", "claimed", "rejected", "raw"]
+const STATUS_TABS = ["qualified", "outreach_sent", "intake_received", "available", "notified", "claimed", "rejected", "expired", "raw", "all"]
+
+function OutreachPanel({ lead, onSent }: { lead: TradesLead; onSent: () => void }) {
+  const appUrl = typeof window !== "undefined" ? window.location.origin : ""
+  const intakeUrl = `${appUrl}/intake/${lead.id}`
+  const message = getOutreachMessage(lead, intakeUrl)
+  const [copied, setCopied] = useState(false)
+  const [marking, setMarking] = useState(false)
+
+  async function copy() {
+    await navigator.clipboard.writeText(message)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function markSent() {
+    setMarking(true)
+    await updateLeadStatus(lead.id, "outreach_sent", { outreachSentAt: new Date().toISOString() })
+    onSent()
+  }
+
+  return (
+    <div className="mt-3 p-3 rounded-lg border border-emerald-900/40 bg-emerald-900/10 space-y-2">
+      <p className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">Outreach message — copy &amp; post manually</p>
+      <p className="text-xs text-[#f5f5f5] font-mono leading-relaxed break-all">{message}</p>
+      <div className="flex gap-2">
+        <button onClick={() => void copy()} className="px-3 py-1.5 text-xs rounded-lg bg-emerald-900/40 text-emerald-400 border border-emerald-800 hover:bg-emerald-900/70 transition-colors">
+          {copied ? "Copied!" : "Copy"}
+        </button>
+        <button onClick={() => void markSent()} disabled={marking} className="px-3 py-1.5 text-xs rounded-lg bg-[#1a1a1a] text-[#a3a3a3] hover:text-emerald-400 transition-colors disabled:opacity-50">
+          {marking ? "Marking…" : "Mark as sent"}
+        </button>
+        <a href={lead.sourceUrl} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs rounded-lg bg-[#1a1a1a] text-[#a3a3a3] hover:text-blue-400 transition-colors">
+          Open post ↗
+        </a>
+      </div>
+    </div>
+  )
+}
 
 function LeadsContent() {
   const sp = useSearchParams()
   const [leads, setLeads] = useState<TradesLead[]>([])
   const [tab, setTab] = useState(sp.get("status") ?? "qualified")
+  const [outreachOpen, setOutreachOpen] = useState<string | null>(null)
   const [notifying, setNotifying] = useState<string | null>(null)
 
   const reload = async () => { setLeads(await getLeads()) }
@@ -53,7 +93,9 @@ function LeadsContent() {
       </div>
       <div className="flex gap-2 flex-wrap mb-6">
         {STATUS_TABS.map(s => (
-          <button key={s} onClick={() => setTab(s)} className={`px-3 py-1 text-xs rounded-lg border transition-colors capitalize ${tab === s ? "bg-emerald-900/40 border-emerald-700 text-emerald-400" : "bg-[#111] border-[#1a1a1a] text-[#a3a3a3] hover:border-[#2a2a2a]"}`}>{s} {s !== "all" && `(${leads.filter(l => l.status === s).length})`}</button>
+          <button key={s} onClick={() => setTab(s)} className={`px-3 py-1 text-xs rounded-lg border transition-colors capitalize ${tab === s ? "bg-emerald-900/40 border-emerald-700 text-emerald-400" : "bg-[#111] border-[#1a1a1a] text-[#a3a3a3] hover:border-[#2a2a2a]"}`}>
+            {s.replace("_", " ")} {s !== "all" && `(${leads.filter(l => l.status === s).length})`}
+          </button>
         ))}
       </div>
       <div className="space-y-3">
@@ -69,28 +111,59 @@ function LeadsContent() {
                   <span className="text-[10px] text-[#525252]">{lead.platform}</span>
                 </div>
                 <p className="text-sm text-[#f5f5f5] mb-1">{lead.problemSummary}</p>
+                {/* Show homeowner contact info if received */}
+                {lead.homeownerName && (
+                  <p className="text-xs text-emerald-400 mb-1">
+                    Contact: {lead.homeownerName}{lead.homeownerPhone ? ` · ${lead.homeownerPhone}` : ""}
+                  </p>
+                )}
                 <p className="text-xs text-[#525252] line-clamp-2">{lead.rawText.slice(0, 200)}</p>
                 <div className="flex items-center gap-3 mt-2 text-[10px] text-[#525252]">
                   <span>Score: <span className={`font-bold ${lead.qualityScore >= 7 ? "text-emerald-400" : lead.qualityScore >= 5 ? "text-yellow-400" : "text-[#525252]"}`}>{lead.qualityScore}/10</span></span>
                   <span>Value: <span className="text-emerald-400 font-bold">${lead.estimatedValue}</span></span>
                   {lead.authorHandle && <span>{lead.authorHandle}</span>}
                   <a href={lead.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400">source</a>
+                  {lead.cascadePosition !== undefined && lead.cascadeBuyerIds && (
+                    <span>Cascade: {lead.cascadePosition + 1}/{lead.cascadeBuyerIds.length}</span>
+                  )}
                 </div>
+                {/* Outreach panel */}
+                {outreachOpen === lead.id && (
+                  <OutreachPanel lead={lead} onSent={() => { setOutreachOpen(null); void reload() }} />
+                )}
               </div>
+
               <div className="flex flex-col gap-1.5 shrink-0">
                 {lead.status === "qualified" && (
                   <>
+                    <button
+                      onClick={() => setOutreachOpen(outreachOpen === lead.id ? null : lead.id)}
+                      className="px-3 py-1.5 text-xs bg-emerald-900/20 text-emerald-400 border border-emerald-900/30 rounded-lg hover:bg-emerald-900/30 transition-colors"
+                    >
+                      {outreachOpen === lead.id ? "Hide outreach" : "Copy Outreach"}
+                    </button>
                     <button onClick={() => void markAvailable(lead.id)} className="px-3 py-1.5 text-xs bg-blue-900/20 text-blue-400 border border-blue-900/30 rounded-lg hover:bg-blue-900/30">Mark Available</button>
                     <button onClick={() => void reject(lead.id)} className="px-3 py-1.5 text-xs bg-[#1a1a1a] text-[#525252] rounded-lg hover:text-red-400">Reject</button>
                   </>
+                )}
+                {lead.status === "outreach_sent" && (
+                  <span className="px-3 py-1.5 text-xs bg-blue-900/40 text-blue-400 rounded-lg text-center">Outreach sent</span>
+                )}
+                {lead.status === "intake_received" && (
+                  <span className="px-3 py-1.5 text-xs bg-emerald-900/40 text-emerald-400 rounded-lg text-center">Intake received ✓</span>
                 )}
                 {lead.status === "available" && (
                   <button onClick={() => void notifyBuyers(lead.id)} disabled={notifying === lead.id} className="px-3 py-1.5 text-xs bg-emerald-700 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50">
                     {notifying === lead.id ? "Notifying…" : "Notify Buyers"}
                   </button>
                 )}
-                {lead.status === "claimed" && <span className="px-3 py-1.5 text-xs bg-emerald-900/40 text-emerald-400 rounded-lg text-center">Claimed</span>}
-                {lead.status === "notified" && <span className="px-3 py-1.5 text-xs bg-yellow-900/40 text-yellow-400 rounded-lg text-center">Awaiting claim</span>}
+                {lead.status === "notified" && (
+                  <span className="px-3 py-1.5 text-xs bg-yellow-900/40 text-yellow-400 rounded-lg text-center">
+                    Cascade {lead.cascadePosition !== undefined && lead.cascadeBuyerIds ? `${lead.cascadePosition + 1}/${lead.cascadeBuyerIds.length}` : "active"}
+                  </span>
+                )}
+                {lead.status === "claimed" && <span className="px-3 py-1.5 text-xs bg-emerald-900/40 text-emerald-400 rounded-lg text-center">Claimed 💰</span>}
+                {lead.status === "expired" && <span className="px-3 py-1.5 text-xs bg-[#1a1a1a] text-[#525252] rounded-lg text-center">Expired</span>}
               </div>
             </div>
           </div>
