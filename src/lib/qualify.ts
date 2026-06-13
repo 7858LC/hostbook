@@ -91,7 +91,7 @@ export async function qualifyBatch(leads: TradesLead[]): Promise<TradesLead[]> {
       problemSummary: q.problemSummary,
       qualityScore: q.qualityScore,
       estimatedValue: q.estimatedValue,
-      status: q.isRelevant && q.qualityScore >= 5 ? "qualified" : "rejected",
+      status: q.isRelevant && q.qualityScore >= 7 ? "qualified" : "rejected",
     })
   }
   return results

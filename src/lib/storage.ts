@@ -10,6 +10,15 @@ function localLoad(): Store {
 }
 function localSave(s: Store) { if (typeof window !== "undefined") localStorage.setItem(KEY, JSON.stringify(s)) }
 
+export async function getLead(id: string): Promise<TradesLead | null> {
+  if (supabase) {
+    const { data } = await supabase.from("trades_leads").select("data").eq("id", id).single()
+    return data ? (data.data as TradesLead) : null
+  }
+  const s = localLoad()
+  return s.leads.find(l => l.id === id) ?? null
+}
+
 export async function getLeads(status?: string): Promise<TradesLead[]> {
   if (supabase) {
     let q = supabase.from("trades_leads").select("data").order("created_at", { ascending: false })
