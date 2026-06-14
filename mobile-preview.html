@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeadFlow — Mobile Preview</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #1a1a1a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  .phone {
+    width: 390px; height: 844px; background: #0a0a0a; border-radius: 44px;
+    border: 8px solid #2a2a2a; overflow: hidden; position: relative;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  }
+  .phone-inner { height: 100%; overflow-y: auto; scroll-behavior: smooth; }
+  .phone-inner::-webkit-scrollbar { display: none; }
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 34px; background: #2a2a2a; border-radius: 0 0 20px 20px;
+    z-index: 10;
+  }
+  .tab-btn { cursor: pointer; padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+  .tab-btn.active { background: #059669; color: white; }
+  .tab-btn.inactive { background: #1a1a1a; color: #a3a3a3; }
+  .toggle-wrap { display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; }
+  input[type=checkbox] { accent-color: #059669; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center py-12 gap-8">
+
+<h1 style="color:#f5f5f5;font-size:18px;font-weight:700;letter-spacing:.05em;">LeadFlow — Mobile Preview</h1>
+
+<div class="toggle-wrap">
+  <div class="tab-btn active" onclick="show('join')">Join Page</div>
+  <div class="tab-btn inactive" onclick="show('claim')">Claim Page</div>
+</div>
+
+<!-- Phone frame -->
+<div class="phone">
+  <div class="notch"></div>
+
+  <!-- JOIN PAGE -->
+  <div id="page-join" class="phone-inner" style="padding-top:44px;">
+    <div style="padding: 24px 16px 40px; color:#f5f5f5;">
+
+      <!-- Header -->
+      <div style="text-align:center; margin-bottom:24px;">
+        <p style="font-size:11px;color:#34d399;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">LeadFlow</p>
+        <h1 style="font-size:26px;font-weight:800;margin:0 0 8px;">Get trades leads in your area</h1>
+        <p style="font-size:13px;color:#525252;line-height:1.6;">We scan Reddit, HN, and Facebook neighborhood groups for homeowners actively looking for help. You get notified. You pay only for leads you want.</p>
+      </div>
+
+      <!-- How it works -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:24px;">
+        <div style="background:#111;border:1px solid #1a1a1a;border-radius:12px;padding:12px;text-align:center;">
+          <p style="font-size:20px;margin:0 0 4px;">📡</p>
+          <p style="font-size:11px;font-weight:700;margin:0 0 2px;">We scan</p>
+          <p style="font-size:10px;color:#525252;margin:0;">Reddit, HN, FB groups — 24/7</p>
+        </div>
+        <div style="background:#111;border:1px solid #1a1a1a;border-radius:12px;padding:12px;text-align:center;">
+          <p style="font-size:20px;margin:0 0 4px;">🤖</p>
+          <p style="font-size:11px;font-weight:700;margin:0 0 2px;">AI qualifies</p>
+          <p style="font-size:10px;color:#525252;margin:0;">Only real service requests</p>
+        </div>
+        <div style="background:#111;border:1px solid #1a1a1a;border-radius:12px;padding:12px;text-align:center;">
+          <p style="font-size:20px;margin:0 0 4px;">📧</p>
+          <p style="font-size:11px;font-weight:700;margin:0 0 2px;">You decide</p>
+          <p style="font-size:10px;color:#525252;margin:0;">Pay only for leads you want</p>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div style="background:#111;border:1px solid #1a1a1a;border-radius:16px;padding:20px;margin-bottom:16px;">
+        <p style="font-size:13px;font-weight:700;margin:0 0 16px;">Your business info</p>
+
+        <!-- Business Name (full width on mobile) -->
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-size:11px;color:#a3a3a3;margin-bottom:4px;">Business Name *</label>
+          <input type="text" placeholder="Acme HVAC LLC" style="width:100%;padding:10px 12px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;font-size:14px;color:#f5f5f5;outline:none;box-sizing:border-box;" />
+        </div>
+
+        <!-- Your Name (full width on mobile) -->
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-size:11px;color:#a3a3a3;margin-bottom:4px;">Your Name *</label>
+          <input type="text" placeholder="Mike Smith" style="width:100%;padding:10px 12px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;font-size:14px;color:#f5f5f5;outline:none;box-sizing:border-box;" />
+        </div>
+
+        <!-- Email (full width on mobile) -->
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-size:11px;color:#a3a3a3;margin-bottom:4px;">Email *</label>
+          <input type="email" placeholder="mike@acmehvac.com" style="width:100%;padding:10px 12px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;font-size:14px;color:#f5f5f5;outline:none;box-sizing:border-box;" />
+        </div>
+
+        <!-- Phone (full width on mobile) -->
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-size:11px;color:#a3a3a3;margin-bottom:4px;">Phone</label>
+          <input type="tel" placeholder="404-555-0192" style="width:100%;padding:10px 12px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;font-size:14px;color:#f5f5f5;outline:none;box-sizing:border-box;" />
+        </div>
+
+        <!-- License -->
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-size:11px;color:#a3a3a3;margin-bottom:4px;">Contractor License # *</label>
+          <input type="text" placeholder="e.g. TACLB12345E" style="width:100%;padding:10px 12px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;font-size:14px;color:#f5f5f5;outline:none;box-sizing:border-box;" />
+          <p style="font-size:10px;color:#525252;margin:4px 0 0;">Required. State-issued license number for your primary trade.</p>
+        </div>
+
+        <!-- Service types -->
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-size:11px;color:#a3a3a3;margin-bottom:8px;">Services You Offer *</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button style="padding:10px 16px;font-size:13px;font-weight:700;border-radius:10px;border:1px solid #059669;background:rgba(5,150,105,0.2);color:#34d399;cursor:pointer;">HVAC</button>
+            <button style="padding:10px 16px;font-size:13px;font-weight:700;border-radius:10px;border:1px solid #2a2a2a;background:#1a1a1a;color:#a3a3a3;cursor:pointer;">Plumbing</button>
+            <button style="padding:10px 16px;font-size:13px;font-weight:700;border-radius:10px;border:1px solid #2a2a2a;background:#1a1a1a;color:#a3a3a3;cursor:pointer;">Electrical</button>
+            <button style="padding:10px 16px;font-size:13px;font-weight:700;border-radius:10px;border:1px solid #2a2a2a;background:#1a1a1a;color:#a3a3a3;cursor:pointer;">Roofing</button>
+            <button style="padding:10px 16px;font-size:13px;font-weight:700;border-radius:10px;border:1px solid #2a2a2a;background:#1a1a1a;color:#a3a3a3;cursor:pointer;">General Contractor</button>
+          </div>
+        </div>
+
+        <!-- State / Zips (full width each on mobile) -->
+        <div style="margin-bottom:0;">
+          <label style="display:block;font-size:11px;color:#a3a3a3;margin-bottom:4px;">Coverage State</label>
+          <input type="text" placeholder="TX" maxlength="2" style="width:100%;padding:10px 12px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;font-size:14px;color:#f5f5f5;outline:none;box-sizing:border-box;margin-bottom:12px;" />
+          <label style="display:block;font-size:11px;color:#a3a3a3;margin-bottom:4px;">Coverage Zip Codes</label>
+          <input type="text" placeholder="78701, 78702, 78703" style="width:100%;padding:10px 12px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;font-size:14px;color:#f5f5f5;outline:none;box-sizing:border-box;" />
+        </div>
+      </div>
+
+      <!-- ToS -->
+      <div style="background:#111;border:1px solid #1a1a1a;border-radius:16px;padding:20px;margin-bottom:16px;">
+        <p style="font-size:13px;font-weight:700;margin:0 0 4px;">Before you join</p>
+        <p style="font-size:11px;color:#525252;margin:0 0 16px;">LeadFlow connects you with real people who publicly asked for help. Read and accept each item.</p>
+
+        <label style="display:flex;align-items:flex-start;gap:16px;padding:12px 4px;border-radius:12px;cursor:pointer;margin-bottom:4px;">
+          <input type="checkbox" style="margin-top:2px;width:20px;height:20px;flex-shrink:0;" />
+          <span style="font-size:13px;color:#a3a3a3;line-height:1.6;">I understand that LeadFlow provides <strong style="color:#f5f5f5;">lead signals</strong> — posts from real people seeking trades services. LeadFlow does not guarantee that any lead will result in a booked job or closed contract.</span>
+        </label>
+
+        <label style="display:flex;align-items:flex-start;gap:16px;padding:12px 4px;border-radius:12px;cursor:pointer;margin-bottom:4px;">
+          <input type="checkbox" style="margin-top:2px;width:20px;height:20px;flex-shrink:0;" />
+          <span style="font-size:13px;color:#a3a3a3;line-height:1.6;">I understand that all lead purchases are <strong style="color:#f5f5f5;">final and non-refundable</strong>. Once I claim a lead and payment is confirmed, the contact details are delivered and the lead is removed from the marketplace.</span>
+        </label>
+
+        <label style="display:flex;align-items:flex-start;gap:16px;padding:12px 4px;border-radius:12px;cursor:pointer;">
+          <input type="checkbox" style="margin-top:2px;width:20px;height:20px;flex-shrink:0;" />
+          <span style="font-size:13px;color:#a3a3a3;line-height:1.6;">I understand that I am responsible for my own outreach, licensing, and service delivery. LeadFlow is a <strong style="color:#f5f5f5;">lead marketplace only</strong> and is not a party to any transaction between me and a homeowner.</span>
+        </label>
+      </div>
+
+      <!-- Submit -->
+      <button style="width:100%;padding:16px;border-radius:14px;font-weight:800;font-size:15px;color:white;background:#059669;border:none;cursor:pointer;margin-bottom:12px;">
+        Join LeadFlow — Get notified of leads →
+      </button>
+      <p style="text-align:center;font-size:11px;color:#525252;">Free to join. You only pay when you choose to claim a lead ($50–$150 per lead).</p>
+    </div>
+  </div>
+
+  <!-- CLAIM PAGE -->
+  <div id="page-claim" class="phone-inner" style="padding-top:44px;display:none;">
+    <div style="padding: 28px 16px 40px; color:#f5f5f5; max-width: 100%;">
+
+      <!-- Header -->
+      <div style="text-align:center;margin-bottom:20px;">
+        <p style="font-size:11px;color:#34d399;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">LeadFlow — Exclusive Lead</p>
+        <h1 style="font-size:24px;font-weight:800;margin:0 0 6px;">Claim this lead</h1>
+        <p style="font-size:13px;color:#525252;">First to pay gets it. Not sold to anyone else after claim.</p>
+      </div>
+
+      <!-- Lead teaser card -->
+      <div style="background:#111;border:1px solid #1a1a1a;border-radius:16px;padding:20px;margin-bottom:16px;">
+        <!-- Badges -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+          <span style="font-size:13px;padding:6px 12px;border-radius:8px;font-weight:800;text-transform:uppercase;color:#f87171;background:rgba(153,27,27,0.3);">Emergency</span>
+          <span style="font-size:13px;padding:6px 12px;border-radius:8px;font-weight:800;text-transform:uppercase;color:#34d399;background:rgba(6,78,59,0.3);">HVAC</span>
+          <span style="font-size:13px;color:#525252;">📍 Austin, TX</span>
+        </div>
+
+        <!-- Problem summary -->
+        <p style="font-size:15px;line-height:1.6;color:#f5f5f5;margin:0 0 16px;">AC unit stopped working last night. Elderly parent living with us, it's 98° today. Need someone out ASAP — willing to pay emergency rate.</p>
+
+        <!-- Price row -->
+        <div style="border-top:1px solid #1a1a1a;padding-top:16px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <p style="font-size:11px;color:#525252;margin:0 0 4px;">Claim price</p>
+            <p style="font-size:36px;font-weight:800;color:#34d399;margin:0;line-height:1;">$150</p>
+          </div>
+          <div style="text-align:right;">
+            <p style="font-size:11px;color:#525252;margin:0 0 4px;">Exclusivity</p>
+            <p style="font-size:15px;font-weight:700;margin:0;">100% exclusive</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ToS checkboxes -->
+      <div style="background:#111;border:1px solid #1a1a1a;border-radius:16px;padding:20px;margin-bottom:16px;">
+        <p style="font-size:11px;font-weight:700;color:#a3a3a3;text-transform:uppercase;letter-spacing:.08em;margin:0 0 12px;">Before you pay</p>
+
+        <label style="display:flex;align-items:flex-start;gap:16px;padding:12px 4px;border-radius:12px;cursor:pointer;margin-bottom:4px;">
+          <input type="checkbox" id="tos1" style="margin-top:2px;width:20px;height:20px;flex-shrink:0;" onchange="updateBtn()" />
+          <span style="font-size:13px;color:#a3a3a3;line-height:1.6;">I understand I am purchasing a <strong style="color:#f5f5f5;">verified lead signal</strong> — a real person who asked for help. I am not buying a guaranteed job or closed contract.</span>
+        </label>
+
+        <label style="display:flex;align-items:flex-start;gap:16px;padding:12px 4px;border-radius:12px;cursor:pointer;">
+          <input type="checkbox" id="tos2" style="margin-top:2px;width:20px;height:20px;flex-shrink:0;" onchange="updateBtn()" />
+          <span style="font-size:13px;color:#a3a3a3;line-height:1.6;">I understand all lead sales are <strong style="color:#f5f5f5;">final and non-refundable</strong>. Full contact details are delivered immediately on payment.</span>
+        </label>
+      </div>
+
+      <!-- Pay button -->
+      <button id="payBtn" style="width:100%;padding:22px;border-radius:16px;font-weight:800;font-size:18px;color:white;background:#1a1a1a;border:none;cursor:not-allowed;margin-bottom:12px;transition:background .2s;opacity:0.45;">
+        Claim for $150 →
+      </button>
+
+      <p style="text-align:center;font-size:11px;color:#525252;">Secured by Stripe · Your card is never stored by LeadFlow</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Label below -->
+<p id="page-label" style="color:#525252;font-size:12px;margin-top:8px;">/join — Buyer signup</p>
+
+<script>
+  function show(page) {
+    document.getElementById('page-join').style.display = page === 'join' ? 'block' : 'none';
+    document.getElementById('page-claim').style.display = page === 'claim' ? 'block' : 'none';
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      const pages = ['join','claim'];
+      b.className = 'tab-btn ' + (pages[i] === page ? 'active' : 'inactive');
+    });
+    document.getElementById('page-label').textContent =
+      page === 'join' ? '/join — Buyer signup' : '/claim/[leadId] — Claim & pay';
+  }
+
+  function updateBtn() {
+    const t1 = document.getElementById('tos1').checked;
+    const t2 = document.getElementById('tos2').checked;
+    const btn = document.getElementById('payBtn');
+    btn.style.background = (t1 && t2) ? '#059669' : '#1a1a1a';
+    btn.style.opacity = (t1 && t2) ? '1' : '0.45';
+    btn.style.cursor = (t1 && t2) ? 'pointer' : 'not-allowed';
+  }
+</script>
+</body>
+</html>
