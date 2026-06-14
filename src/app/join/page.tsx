@@ -23,6 +23,7 @@ export default function JoinPage() {
     contactName: "",
     email: "",
     phone: "",
+    licenseNumber: "",
     serviceTypes: [] as TradeType[],
     coverageState: "",
     coverageZips: "",
@@ -45,6 +46,10 @@ export default function JoinPage() {
       setError("Business name, contact name, and email are required.")
       return
     }
+    if (!form.licenseNumber.trim()) {
+      setError("Contractor license number is required.")
+      return
+    }
     if (form.serviceTypes.length === 0) {
       setError("Select at least one service type.")
       return
@@ -61,6 +66,7 @@ export default function JoinPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
+          licenseNumber: form.licenseNumber.trim(),
           coverageZips: form.coverageZips.split(/[\s,]+/).map(z => z.trim()).filter(Boolean),
         }),
       })
@@ -142,6 +148,12 @@ export default function JoinPage() {
               <label className="block text-xs text-[#a3a3a3] mb-1">Phone</label>
               <input className={inp} type="tel" placeholder="404-555-0192" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-[#a3a3a3] mb-1">Contractor License # *</label>
+            <input className={inp} placeholder="e.g. TACLB12345E" value={form.licenseNumber} onChange={e => setForm(f => ({ ...f, licenseNumber: e.target.value }))} />
+            <p className="text-[10px] text-[#525252] mt-1">Required. State-issued license number for your primary trade.</p>
           </div>
 
           <div>

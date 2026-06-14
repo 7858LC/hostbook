@@ -18,6 +18,7 @@ export default function IntakePage() {
   const [step, setStep] = useState<Step>("form")
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
+  const [email, setEmail] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
 
@@ -32,14 +33,14 @@ export default function IntakePage() {
   }, [leadId])
 
   async function handleSubmit() {
-    if (!name.trim() || !phone.trim()) { setError("Both fields are required."); return }
+    if (!name.trim() || !phone.trim()) { setError("Name and phone are required."); return }
     setSubmitting(true)
     setError("")
     try {
       const res = await fetch(`/api/intake/${leadId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), phone: phone.trim() }),
+        body: JSON.stringify({ name: name.trim(), phone: phone.trim(), email: email.trim() || undefined }),
       })
       const data = await res.json() as { ok?: boolean; error?: string }
       if (!res.ok || data.error) { setError(data.error ?? "Something went wrong."); return }
@@ -66,7 +67,7 @@ export default function IntakePage() {
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
       <div className="text-center space-y-4 max-w-sm">
         <p className="text-3xl">✅</p>
-        <p className="text-xl font-bold text-[#f5f5f5]">You're all set</p>
+        <p className="text-xl font-bold text-[#f5f5f5]">You&apos;re all set</p>
         <p className="text-sm text-[#a3a3a3] leading-relaxed">
           A licensed contractor in your area will reach out to you directly within 30 minutes. Check your phone.
         </p>
@@ -79,7 +80,7 @@ export default function IntakePage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#f5f5f5] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6">
+      <div className="w-full max-w-sm space-y-4">
         <div className="text-center space-y-2">
           <p className="text-sm text-[#525252]">
             {city ? `${tradeLabel} contractor available in ${city}` : `${tradeLabel} contractor available in your area`}
@@ -91,7 +92,7 @@ export default function IntakePage() {
         <div className="space-y-3">
           <input
             className={inp}
-            placeholder="Your name"
+            placeholder="Your name *"
             value={name}
             onChange={e => setName(e.target.value)}
             autoComplete="name"
@@ -99,10 +100,18 @@ export default function IntakePage() {
           <input
             className={inp}
             type="tel"
-            placeholder="Phone number"
+            placeholder="Phone number *"
             value={phone}
             onChange={e => setPhone(e.target.value)}
             autoComplete="tel"
+          />
+          <input
+            className={inp}
+            type="email"
+            placeholder="Email (optional — we'll notify you if we can't match)"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            autoComplete="email"
           />
         </div>
 
@@ -116,8 +125,9 @@ export default function IntakePage() {
           {submitting ? "Submitting…" : "Connect me with a contractor →"}
         </button>
 
-        <p className="text-center text-xs text-[#525252]">
-          Your info is shared with one contractor only. No spam.
+        {/* TCPA consent */}
+        <p className="text-center text-xs text-[#525252] leading-relaxed">
+          By submitting, you consent to be contacted by a licensed contractor regarding your request. Your info is shared with one contractor only.
         </p>
       </div>
     </div>

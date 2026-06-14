@@ -82,6 +82,32 @@ export async function advanceCascade(leadId: string): Promise<"advanced" | "expi
 
   if (nextPos >= buyerIds.length) {
     await updateLeadStatus(leadId, "expired")
+    // Notify homeowner if they gave us an email
+    const expired = await getLead(leadId)
+    if (expired?.homeownerEmail) {
+      const apiKey = process.env.RESEND_API_KEY
+      if (apiKey) {
+        const resend = new Resend(apiKey)
+        const from = process.env.RESEND_FROM_EMAIL ?? "LeadFlow <onboarding@resend.dev>"
+        await resend.emails.send({
+          from,
+          to: expired.homeownerEmail,
+          subject: "Update on your contractor request",
+          text: `Hi ${expired.homeownerName ?? "there"},
+
+We weren't able to match you with an available contractor this time — all of our contractors in your area were already booked.
+
+A few options:
+- Try posting on Nextdoor or Angi for your area
+- Call 211 for emergency home repair resources
+- Reply to this email and we'll try again manually
+
+Sorry we couldn't connect you this time.
+
+— LeadFlow`,
+        })
+      }
+    }
     return "expired"
   }
 

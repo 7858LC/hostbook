@@ -31,6 +31,7 @@ export interface TradesLead {
   outreachSentAt?: string
   homeownerName?: string
   homeownerPhone?: string
+  homeownerEmail?: string
   // Cascade
   cascadePosition?: number
   cascadeBuyerIds?: string[]
@@ -53,5 +54,8 @@ export interface Buyer {
   coverageState?: string
   active: boolean
   totalLeadsClaimed: number
+  licenseNumber?: string
+  badge?: "verified"
+  verifiedAt?: string
   createdAt: string
 }

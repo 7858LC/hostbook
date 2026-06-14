@@ -10,6 +10,7 @@ export async function POST(req: NextRequest) {
     contactName: string
     email: string
     phone?: string
+    licenseNumber?: string
     serviceTypes: TradeType[]
     coverageState?: string
     coverageZips: string[]
@@ -17,6 +18,9 @@ export async function POST(req: NextRequest) {
 
   if (!body.businessName || !body.contactName || !body.email) {
     return NextResponse.json({ error: "businessName, contactName, and email are required" }, { status: 400 })
+  }
+  if (!body.licenseNumber?.trim()) {
+    return NextResponse.json({ error: "Contractor license number is required" }, { status: 400 })
   }
   if (!body.serviceTypes?.length) {
     return NextResponse.json({ error: "At least one service type is required" }, { status: 400 })
@@ -34,6 +38,7 @@ export async function POST(req: NextRequest) {
     contactName: body.contactName,
     email: body.email.toLowerCase(),
     phone: body.phone,
+    licenseNumber: body.licenseNumber?.trim(),
     serviceTypes: body.serviceTypes,
     coverageZips: body.coverageZips,
     coverageState: body.coverageState,

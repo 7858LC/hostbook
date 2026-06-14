@@ -9,7 +9,7 @@ export async function POST(req: NextRequest, { params }: { params: { leadId: str
     return NextResponse.json({ error: "This lead is no longer available." }, { status: 410 })
   }
 
-  const { name, phone } = await req.json() as { name: string; phone: string }
+  const { name, phone, email } = await req.json() as { name: string; phone: string; email?: string }
   if (!name?.trim() || !phone?.trim()) {
     return NextResponse.json({ error: "Name and phone are required." }, { status: 400 })
   }
@@ -18,6 +18,7 @@ export async function POST(req: NextRequest, { params }: { params: { leadId: str
   await updateLeadStatus(params.leadId, "intake_received", {
     homeownerName: name.trim(),
     homeownerPhone: phone.trim(),
+    homeownerEmail: email?.trim() || undefined,
   })
 
   // Start the buyer cascade

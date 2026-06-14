@@ -5,8 +5,8 @@ import { getBuyers, saveBuyer, deleteBuyer } from "@/lib/storage"
 import type { Buyer, TradeType } from "@/types/leads"
 
 const TRADE_TYPES: TradeType[] = ["hvac", "plumbing", "electrical", "roofing", "general"]
-const EMPTY = (): Omit<Buyer, "id" | "createdAt" | "totalLeadsClaimed"> => ({
-  businessName: "", contactName: "", email: "", phone: "", serviceTypes: [], coverageZips: [], coverageState: "", active: true,
+const EMPTY = (): Omit<Buyer, "id" | "createdAt" | "totalLeadsClaimed" | "badge" | "verifiedAt"> => ({
+  businessName: "", contactName: "", email: "", phone: "", licenseNumber: "", serviceTypes: [], coverageZips: [], coverageState: "", active: true,
 })
 
 export default function BuyersPage() {
@@ -19,14 +19,14 @@ export default function BuyersPage() {
   useEffect(() => { void getBuyers(false).then(setBuyers) }, [])
 
   function reset() { setSelected(null); setForm(EMPTY()); setZipInput("") }
-  function select(b: Buyer) { setSelected(b); setForm({ businessName: b.businessName, contactName: b.contactName, email: b.email, phone: b.phone ?? "", serviceTypes: [...b.serviceTypes], coverageZips: [...b.coverageZips], coverageState: b.coverageState ?? "", active: b.active }); setZipInput(b.coverageZips.join(", ")) }
+  function select(b: Buyer) { setSelected(b); setForm({ businessName: b.businessName, contactName: b.contactName, email: b.email, phone: b.phone ?? "", licenseNumber: b.licenseNumber ?? "", serviceTypes: [...b.serviceTypes], coverageZips: [...b.coverageZips], coverageState: b.coverageState ?? "", active: b.active }); setZipInput(b.coverageZips.join(", ")) }
   function toggleType(t: TradeType) { setForm(f => ({ ...f, serviceTypes: f.serviceTypes.includes(t) ? f.serviceTypes.filter(x => x !== t) : [...f.serviceTypes, t] })) }
 
   async function save() {
     if (!form.businessName || !form.email) return alert("Business name and email required")
     setSaving(true)
     const zips = zipInput.split(/[\s,]+/).map(z => z.trim()).filter(Boolean)
-    const buyer: Buyer = { ...form, coverageZips: zips, id: selected?.id ?? nanoid(10), createdAt: selected?.createdAt ?? new Date().toISOString(), totalLeadsClaimed: selected?.totalLeadsClaimed ?? 0 }
+    const buyer: Buyer = { ...form, coverageZips: zips, id: selected?.id ?? nanoid(10), createdAt: selected?.createdAt ?? new Date().toISOString(), totalLeadsClaimed: selected?.totalLeadsClaimed ?? 0, badge: selected?.badge, verifiedAt: selected?.verifiedAt }
     await saveBuyer(buyer); setBuyers(await getBuyers(false)); setSelected(buyer); setSaving(false); alert("Saved!")
   }
 
@@ -49,7 +49,10 @@ export default function BuyersPage() {
           {buyers.map(b => (
             <div key={b.id} onClick={() => select(b)} className={`p-3 rounded-xl border cursor-pointer transition-colors ${selected?.id === b.id ? "bg-emerald-900/20 border-emerald-700" : "bg-[#111] border-[#1a1a1a] hover:border-[#2a2a2a]"}`}>
               <div className="flex justify-between">
-                <span className="text-sm font-medium">{b.businessName}</span>
+                <span className="text-sm font-medium flex items-center gap-1">
+                  {b.businessName}
+                  {b.badge === "verified" && <span title="LeadFlow Verified" className="text-[10px] px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-400 border border-amber-800/50">🏅 Verified</span>}
+                </span>
                 <div className="flex gap-1 items-center">
                   <span className={`text-[9px] px-1.5 py-0.5 rounded ${b.active ? "bg-emerald-900 text-emerald-400" : "bg-[#2a2a2a] text-[#525252]"}`}>{b.active ? "active" : "paused"}</span>
                   <button onClick={e => { e.stopPropagation(); void del(b.id) }} className="text-[#525252] hover:text-red-400 text-xs">x</button>
@@ -59,7 +62,7 @@ export default function BuyersPage() {
               <div className="flex gap-1 mt-1 flex-wrap">
                 {b.serviceTypes.map(t => <span key={t} className="px-1 py-0.5 text-[9px] bg-[#1a1a1a] text-[#a3a3a3] rounded uppercase">{t}</span>)}
               </div>
-              <p className="text-[10px] text-[#525252] mt-1">{b.totalLeadsClaimed} leads claimed</p>
+              <p className="text-[10px] text-[#525252] mt-1">{b.totalLeadsClaimed} leads claimed{b.licenseNumber ? ` · ${b.licenseNumber}` : ""}</p>
             </div>
           ))}
         </div>
@@ -70,6 +73,7 @@ export default function BuyersPage() {
             <div><label className="block text-xs text-[#a3a3a3] mb-1">Contact Name</label><input value={form.contactName} onChange={e => setForm(f => ({ ...f, contactName: e.target.value }))} placeholder="John Smith" className={inp} /></div>
             <div><label className="block text-xs text-[#a3a3a3] mb-1">Email *</label><input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="john@smithshvac.com" className={inp} /></div>
             <div><label className="block text-xs text-[#a3a3a3] mb-1">Phone</label><input value={form.phone ?? ""} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="(555) 123-4567" className={inp} /></div>
+            <div className="md:col-span-2"><label className="block text-xs text-[#a3a3a3] mb-1">License #</label><input value={form.licenseNumber ?? ""} onChange={e => setForm(f => ({ ...f, licenseNumber: e.target.value }))} placeholder="TACLB12345E" className={inp} /></div>
           </div>
           <div>
             <label className="block text-xs text-[#a3a3a3] mb-2">Service Types</label>
