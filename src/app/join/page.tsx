@@ -128,7 +128,7 @@ export default function JoinPage() {
         <div className="bg-[#111] border border-[#1a1a1a] rounded-2xl p-6 space-y-5">
           <h2 className="text-sm font-semibold text-[#f5f5f5]">Your business info</h2>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-[#a3a3a3] mb-1">Business Name *</label>
               <input className={inp} placeholder="Acme HVAC LLC" value={form.businessName} onChange={e => setForm(f => ({ ...f, businessName: e.target.value }))} />
@@ -139,7 +139,7 @@ export default function JoinPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-[#a3a3a3] mb-1">Email *</label>
               <input className={inp} type="email" placeholder="mike@acmehvac.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
@@ -164,7 +164,7 @@ export default function JoinPage() {
                   key={t.value}
                   type="button"
                   onClick={() => toggleType(t.value)}
-                  className={`px-3 py-1.5 text-xs rounded-lg border font-semibold transition-colors ${
+                  className={`px-4 py-3 text-sm rounded-xl border font-semibold transition-colors ${
                     form.serviceTypes.includes(t.value)
                       ? "bg-emerald-900/40 border-emerald-700 text-emerald-400"
                       : "bg-[#0a0a0a] border-[#2a2a2a] text-[#a3a3a3] hover:border-[#3a3a3a]"
@@ -176,7 +176,7 @@ export default function JoinPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-[#a3a3a3] mb-1">Coverage State</label>
               <input className={inp} placeholder="TX" maxLength={2} value={form.coverageState} onChange={e => setForm(f => ({ ...f, coverageState: e.target.value.toUpperCase() }))} />
@@ -210,14 +210,14 @@ export default function JoinPage() {
               text: <>I understand that I am responsible for my own outreach, licensing, and service delivery. LeadFlow is a <strong className="text-[#f5f5f5]">lead marketplace only</strong> and is not a party to any transaction between me and a homeowner.</>,
             },
           ].map((item, i) => (
-            <label key={i} className="flex items-start gap-3 cursor-pointer group">
+            <label key={i} className="flex items-start gap-4 cursor-pointer py-3 px-1 rounded-xl active:bg-white/5 transition-colors">
               <input
                 type="checkbox"
                 checked={item.state}
                 onChange={e => item.set(e.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+                className="mt-0.5 w-5 h-5 accent-emerald-500 flex-shrink-0 cursor-pointer"
               />
-              <span className="text-sm text-[#a3a3a3] group-hover:text-[#f5f5f5] transition-colors leading-relaxed">
+              <span className="text-sm text-[#a3a3a3] leading-relaxed">
                 {item.text}
               </span>
             </label>

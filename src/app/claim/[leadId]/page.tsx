@@ -76,7 +76,7 @@ export default function ClaimPage() {
 
   if (loading) return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-      <div className="text-[#525252] text-sm">Loading lead…</div>
+      <div className="text-[#525252] text-sm">Loading…</div>
     </div>
   )
 
@@ -92,7 +92,7 @@ export default function ClaimPage() {
   if (lead.status === "claimed") return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
       <div className="text-center">
-        <p className="text-2xl mb-3">🔒</p>
+        <p className="text-3xl mb-3">🔒</p>
         <p className="text-lg font-semibold text-[#f5f5f5] mb-2">Already claimed</p>
         <p className="text-sm text-[#525252]">Another contractor got here first. Watch your inbox for the next lead.</p>
       </div>
@@ -102,8 +102,8 @@ export default function ClaimPage() {
   const locationStr = [lead.location, lead.locationState].filter(Boolean).join(", ")
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#f5f5f5] px-4 py-12 flex items-start justify-center">
-      <div className="w-full max-w-lg space-y-6">
+    <div className="min-h-screen bg-[#0a0a0a] text-[#f5f5f5] px-4 py-8 flex items-start justify-center">
+      <div className="w-full max-w-lg space-y-5">
 
         <div className="text-center">
           <p className="text-xs text-emerald-400 font-semibold uppercase tracking-wider mb-2">LeadFlow — Exclusive Lead</p>
@@ -111,72 +111,73 @@ export default function ClaimPage() {
           <p className="text-sm text-[#525252] mt-1">First to pay gets it. Not sold to anyone else after claim.</p>
         </div>
 
-        {/* Lead teaser card */}
+        {/* Lead teaser */}
         <div className="bg-[#111] border border-[#1a1a1a] rounded-2xl p-5 space-y-4">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`text-xs px-2.5 py-1 rounded-lg font-bold uppercase ${URGENCY_COLOR[lead.urgency] ?? URGENCY_COLOR.unknown}`}>
+            <span className={`text-sm px-3 py-1.5 rounded-lg font-bold uppercase ${URGENCY_COLOR[lead.urgency] ?? URGENCY_COLOR.unknown}`}>
               {URGENCY_LABEL[lead.urgency] ?? lead.urgency}
             </span>
-            <span className={`text-xs px-2.5 py-1 rounded-lg font-bold uppercase ${TRADE_COLOR[lead.tradeType] ?? TRADE_COLOR.unknown}`}>
+            <span className={`text-sm px-3 py-1.5 rounded-lg font-bold uppercase ${TRADE_COLOR[lead.tradeType] ?? TRADE_COLOR.unknown}`}>
               {lead.tradeType.toUpperCase()}
             </span>
-            {locationStr && <span className="text-xs text-[#525252]">📍 {locationStr}</span>}
+            {locationStr && <span className="text-sm text-[#525252]">📍 {locationStr}</span>}
           </div>
-          <p className="text-sm leading-relaxed">{lead.problemSummary}</p>
-          <div className="border-t border-[#1a1a1a] pt-3 flex items-center justify-between">
+          <p className="text-base leading-relaxed">{lead.problemSummary}</p>
+          <div className="border-t border-[#1a1a1a] pt-4 flex items-center justify-between">
             <div>
               <p className="text-xs text-[#525252]">Claim price</p>
-              <p className="text-2xl font-bold text-emerald-400">${lead.estimatedValue}</p>
+              <p className="text-3xl font-bold text-emerald-400">${lead.estimatedValue}</p>
             </div>
             <div className="text-right">
               <p className="text-xs text-[#525252]">Exclusivity</p>
-              <p className="text-sm font-semibold">100% exclusive</p>
+              <p className="text-base font-semibold">100% exclusive</p>
             </div>
           </div>
         </div>
 
-        {/* ToS checkboxes */}
-        <div className="bg-[#111] border border-[#1a1a1a] rounded-2xl p-5 space-y-4">
-          <p className="text-xs font-semibold text-[#a3a3a3] uppercase tracking-wider">Before you pay</p>
+        {/* ToS — large tap targets */}
+        <div className="bg-[#111] border border-[#1a1a1a] rounded-2xl p-5 space-y-2">
+          <p className="text-xs font-semibold text-[#a3a3a3] uppercase tracking-wider mb-3">Before you pay</p>
 
-          <label className="flex items-start gap-3 cursor-pointer group">
+          <label className="flex items-start gap-4 cursor-pointer py-3 px-1 rounded-xl active:bg-white/5 transition-colors">
             <input
               type="checkbox"
               checked={tos1}
               onChange={e => setTos1(e.target.checked)}
-              className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+              className="mt-0.5 w-5 h-5 accent-emerald-500 flex-shrink-0 cursor-pointer"
             />
-            <span className="text-sm text-[#a3a3a3] group-hover:text-[#f5f5f5] transition-colors leading-relaxed">
-              I understand I am purchasing a <strong className="text-[#f5f5f5]">verified lead signal</strong> — a real person who publicly asked for trades help. I am not buying a guaranteed job or closed contract.
+            <span className="text-sm text-[#a3a3a3] leading-relaxed">
+              I understand I am purchasing a <strong className="text-[#f5f5f5]">verified lead signal</strong> — a real person who asked for help. I am not buying a guaranteed job or closed contract.
             </span>
           </label>
 
-          <label className="flex items-start gap-3 cursor-pointer group">
+          <label className="flex items-start gap-4 cursor-pointer py-3 px-1 rounded-xl active:bg-white/5 transition-colors">
             <input
               type="checkbox"
               checked={tos2}
               onChange={e => setTos2(e.target.checked)}
-              className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+              className="mt-0.5 w-5 h-5 accent-emerald-500 flex-shrink-0 cursor-pointer"
             />
-            <span className="text-sm text-[#a3a3a3] group-hover:text-[#f5f5f5] transition-colors leading-relaxed">
-              I understand all lead sales are <strong className="text-[#f5f5f5]">final and non-refundable</strong>. Once claimed, the full contact details are delivered immediately by email.
+            <span className="text-sm text-[#a3a3a3] leading-relaxed">
+              I understand all lead sales are <strong className="text-[#f5f5f5]">final and non-refundable</strong>. Full contact details are delivered immediately on payment.
             </span>
           </label>
         </div>
 
-        {error && <p className="text-sm text-red-400 text-center">{error}</p>}
+        {error && <p className="text-sm text-red-400 text-center px-2">{error}</p>}
 
+        {/* Big pay button — easy thumb target */}
         <button
           onClick={() => void handleClaim()}
           disabled={paying || !tos1 || !tos2}
-          className="w-full py-3.5 rounded-xl font-bold text-sm text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full py-5 rounded-2xl font-bold text-lg text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ background: tos1 && tos2 ? "#059669" : "#1a1a1a" }}
         >
-          {paying ? "Redirecting to payment…" : `Claim for $${lead.estimatedValue} →`}
+          {paying ? "Redirecting…" : `Claim for $${lead.estimatedValue} →`}
         </button>
 
-        <p className="text-center text-xs text-[#525252]">
-          Secured by Stripe. Your card is never stored by LeadFlow.
+        <p className="text-center text-xs text-[#525252] pb-4">
+          Secured by Stripe · Your card is never stored by LeadFlow
         </p>
       </div>
     </div>
