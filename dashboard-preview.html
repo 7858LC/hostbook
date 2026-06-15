@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeadFlow — Dashboard Preview</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { background: #050505; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #f5f5f5; margin: 0; }
+  .modal-bg { position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px; }
+  .hidden { display: none !important; }
+  input, textarea, select { background: #0a0a0a; border: 1px solid #2a2a2a; color: #f5f5f5; border-radius: 8px; font-size: 13px; outline: none; padding: 8px 12px; font-family: inherit; }
+  input::placeholder, textarea::placeholder { color: #525252; }
+  input:focus, textarea:focus { border-color: #059669; }
+  .btn-primary { background: #059669; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .15s; }
+  .btn-primary:hover { background: #047857; }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-ghost { background: #1a1a1a; border: 1px solid #2a2a2a; color: #a3a3a3; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: color .15s; }
+  .btn-ghost:hover { color: #f5f5f5; }
+  .btn-blue { background: #1d4ed8; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .btn-blue:hover { background: #1e40af; }
+  .card { background: #111; border: 1px solid #1a1a1a; border-radius: 14px; }
+  .tab { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; color: #525252; }
+  .tab.active { background: #059669; color: white; }
+  .tab:not(.active):hover { color: #a3a3a3; }
+  .platform-btn { padding: 4px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: #0a0a0a; color: #a3a3a3; font-size: 11px; cursor: pointer; transition: all .15s; text-transform: capitalize; }
+  .platform-btn.active { background: rgba(5,150,105,0.25); border-color: #059669; color: #34d399; }
+  .urgency-emergency { color: #f87171; background: rgba(153,27,27,0.3); }
+  .urgency-urgent { color: #fbbf24; background: rgba(120,53,15,0.3); }
+  .urgency-planned { color: #60a5fa; background: rgba(29,78,216,0.25); }
+  .trade-hvac { color: #34d399; background: rgba(6,78,59,0.3); }
+  .trade-plumbing { color: #60a5fa; background: rgba(29,78,216,0.25); }
+  .trade-electrical { color: #fbbf24; background: rgba(120,53,15,0.3); }
+  .trade-roofing { color: #c084fc; background: rgba(88,28,135,0.3); }
+  .status-pill { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 700; }
+  .s-qualified { background: rgba(29,78,216,0.25); color: #60a5fa; }
+  .s-notified { background: rgba(5,150,105,0.2); color: #34d399; }
+  .s-claimed { background: rgba(5,150,105,0.3); color: #34d399; }
+  .s-outreach { background: rgba(120,53,15,0.3); color: #fbbf24; }
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav style="position:fixed;top:0;left:0;right:0;z-index:40;height:52px;border-bottom:1px solid #1a1a1a;background:rgba(5,5,5,0.95);backdrop-filter:blur(8px);display:flex;align-items:center;padding:0 24px;gap:24px;">
+  <span style="font-size:14px;font-weight:800;color:#34d399;">LeadFlow</span>
+  <div style="display:flex;gap:16px;">
+    <a href="#" onclick="showPage('dashboard')" style="font-size:13px;color:#f5f5f5;text-decoration:none;font-weight:600;" id="nav-dashboard">Dashboard</a>
+    <a href="#" onclick="showPage('leads')" style="font-size:13px;color:#525252;text-decoration:none;" id="nav-leads">Leads</a>
+    <a href="#" onclick="showPage('buyers')" style="font-size:13px;color:#525252;text-decoration:none;" id="nav-buyers">Buyers</a>
+  </div>
+  <a href="#" onclick="showPage('join')" style="margin-left:auto;font-size:11px;font-weight:700;padding:6px 12px;border-radius:8px;background:rgba(5,150,105,0.2);color:#34d399;border:1px solid rgba(5,150,105,0.4);text-decoration:none;">+ Buyer Signup</a>
+</nav>
+
+<!-- ═══════════════ DASHBOARD ═══════════════ -->
+<div id="page-dashboard" style="padding-top:72px;padding-bottom:40px;padding-left:24px;padding-right:24px;max-width:900px;margin:0 auto;">
+
+  <!-- Header row -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:28px;">
+    <div>
+      <h1 style="font-size:22px;font-weight:800;margin:0;">LeadFlow</h1>
+      <p style="font-size:13px;color:#a3a3a3;margin:4px 0 0;">Trades lead marketplace — HVAC · Plumbing · Electrical · Roofing</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-ghost" onclick="document.getElementById('modal').classList.remove('hidden')">+ Log Lead</button>
+      <button class="btn-primary" onclick="fakeScan()">Scan Reddit/HN</button>
+      <button class="btn-blue" onclick="toggleFb()">Scan FB Groups</button>
+    </div>
+  </div>
+
+  <!-- FB scan panel -->
+  <div id="fb-panel" class="card hidden" style="padding:16px;margin-bottom:20px;border-color:rgba(29,78,216,0.3);">
+    <p style="font-size:12px;color:#a3a3a3;margin:0 0 8px;">Paste Facebook neighborhood/community group URLs (one per line). Requires <code style="color:#60a5fa;">APIFY_API_TOKEN</code> env var.</p>
+    <textarea rows="3" placeholder="https://www.facebook.com/groups/austinneighbors&#10;https://www.facebook.com/groups/..." style="width:100%;font-size:11px;font-family:monospace;margin-bottom:8px;resize:none;"></textarea>
+    <button class="btn-blue">Run Facebook Scan</button>
+  </div>
+
+  <!-- Scan result banner -->
+  <div id="scan-result" class="hidden" style="background:rgba(5,150,105,0.15);border:1px solid rgba(5,150,105,0.4);border-radius:10px;padding:12px 16px;font-size:13px;color:#34d399;margin-bottom:20px;">
+    Reddit/HN: found 14 signals → 6 new → 3 qualified
+  </div>
+
+  <!-- KPI row -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
+    <div class="card" style="padding:16px;">
+      <div style="font-size:26px;font-weight:800;color:#34d399;">$450</div>
+      <div style="font-size:11px;color:#a3a3a3;margin-top:4px;">Revenue</div>
+    </div>
+    <div class="card" style="padding:16px;">
+      <div style="font-size:26px;font-weight:800;color:#34d399;">3</div>
+      <div style="font-size:11px;color:#a3a3a3;margin-top:4px;">Claimed</div>
+    </div>
+    <div class="card" style="padding:16px;">
+      <div style="font-size:26px;font-weight:800;color:#60a5fa;">4</div>
+      <div style="font-size:11px;color:#a3a3a3;margin-top:4px;">Qualified</div>
+    </div>
+    <div class="card" style="padding:16px;">
+      <div style="font-size:26px;font-weight:800;">7</div>
+      <div style="font-size:11px;color:#a3a3a3;margin-top:4px;">Active Buyers</div>
+    </div>
+  </div>
+
+  <!-- Pipeline -->
+  <div class="card" style="padding:20px;margin-bottom:20px;">
+    <p style="font-size:13px;font-weight:700;margin:0 0 16px;">Pipeline</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;text-align:center;">
+      <div><div style="font-size:24px;font-weight:800;color:#60a5fa;">4</div><div style="font-size:10px;color:#525252;margin-top:2px;">Qualified</div></div>
+      <div><div style="font-size:24px;font-weight:800;color:#fbbf24;">2</div><div style="font-size:10px;color:#525252;margin-top:2px;">Outreach</div></div>
+      <div><div style="font-size:24px;font-weight:800;color:#34d399;">1</div><div style="font-size:10px;color:#525252;margin-top:2px;">In cascade</div></div>
+      <div><div style="font-size:24px;font-weight:800;color:#34d399;">3</div><div style="font-size:10px;color:#525252;margin-top:2px;">Claimed</div></div>
+    </div>
+  </div>
+
+  <!-- Quick nav cards -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="card" onclick="showPage('leads')" style="padding:20px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='#065f46'" onmouseout="this.style.borderColor='#1a1a1a'">
+      <div style="font-size:24px;font-weight:800;color:#60a5fa;">4</div>
+      <div style="font-size:14px;font-weight:700;margin-top:4px;">Qualified Leads</div>
+      <p style="font-size:11px;color:#525252;margin:4px 0 0;">Ready for outreach. Click to review and copy messages.</p>
+    </div>
+    <div class="card" onclick="showPage('buyers')" style="padding:20px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='#065f46'" onmouseout="this.style.borderColor='#1a1a1a'">
+      <div style="font-size:24px;font-weight:800;color:#34d399;">7</div>
+      <div style="font-size:14px;font-weight:700;margin-top:4px;">Active Buyers</div>
+      <p style="font-size:11px;color:#525252;margin:4px 0 0;">Professionals signed up to receive leads.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ LEADS PAGE ═══════════════ -->
+<div id="page-leads" class="hidden" style="padding-top:72px;padding-bottom:40px;padding-left:24px;padding-right:24px;max-width:900px;margin:0 auto;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div><h1 style="font-size:22px;font-weight:800;margin:0;">Leads</h1><p style="font-size:13px;color:#a3a3a3;margin:4px 0 0;">All detected and qualified leads</p></div>
+  </div>
+
+  <!-- Status tabs -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
+    <span class="tab active" onclick="setTab(this,'all')">All (10)</span>
+    <span class="tab" onclick="setTab(this,'qualified')">Qualified (4)</span>
+    <span class="tab" onclick="setTab(this,'outreach')">Outreach (2)</span>
+    <span class="tab" onclick="setTab(this,'notified')">In Cascade (1)</span>
+    <span class="tab" onclick="setTab(this,'claimed')">Claimed (3)</span>
+    <span class="tab" onclick="setTab(this,'rejected')">Rejected</span>
+  </div>
+
+  <!-- Lead rows -->
+  <div style="display:flex;flex-direction:column;gap:10px;">
+
+    <!-- Lead 1 — qualified, HVAC emergency -->
+    <div class="card" style="padding:16px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center;">
+            <span style="font-size:11px;padding:4px 10px;border-radius:6px;font-weight:800;text-transform:uppercase;" class="urgency-emergency">Emergency</span>
+            <span style="font-size:11px;padding:4px 10px;border-radius:6px;font-weight:800;text-transform:uppercase;" class="trade-hvac">HVAC</span>
+            <span style="font-size:11px;color:#525252;">📍 Austin, TX</span>
+            <span class="status-pill s-qualified">qualified</span>
+            <span style="font-size:10px;color:#525252;">Score 9/10 · $150</span>
+          </div>
+          <p style="font-size:13px;color:#f5f5f5;margin:0 0 10px;line-height:1.5;">AC unit stopped working last night. Elderly parent at home, 98° today. Need someone out ASAP — willing to pay emergency rate.</p>
+          <div style="background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:12px;">
+            <p style="font-size:11px;color:#a3a3a3;margin:0 0 6px;font-weight:600;">OUTREACH MESSAGE</p>
+            <p style="font-size:12px;color:#f5f5f5;margin:0 0 8px;font-style:italic;">"Still without AC? Have a tech available in Austin today →  leadflow.app/i/abc123"</p>
+            <div style="display:flex;gap:8px;">
+              <button class="btn-primary" style="font-size:11px;padding:5px 12px;">Copy Message</button>
+              <button class="btn-ghost" style="font-size:11px;padding:5px 12px;">Mark Sent</button>
+              <a href="#" style="font-size:11px;color:#525252;text-decoration:none;padding:5px 0;">Open post ↗</a>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:18px;font-weight:800;color:#34d399;">$150</div>
+          <div style="font-size:10px;color:#525252;">reddit · 2h ago</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lead 2 — notified/cascade -->
+    <div class="card" style="padding:16px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center;">
+            <span style="font-size:11px;padding:4px 10px;border-radius:6px;font-weight:800;text-transform:uppercase;" class="urgency-urgent">Urgent</span>
+            <span style="font-size:11px;padding:4px 10px;border-radius:6px;font-weight:800;text-transform:uppercase;" class="trade-plumbing">Plumbing</span>
+            <span style="font-size:11px;color:#525252;">📍 Atlanta, GA</span>
+            <span class="status-pill s-notified">in cascade</span>
+            <span style="font-size:10px;color:#525252;">Buyer 1/3 · 18 min left</span>
+          </div>
+          <p style="font-size:13px;color:#f5f5f5;margin:0;line-height:1.5;">Slow drain in master bath getting worse. Tried Drano, didn't help. Want someone to look at it this week.</p>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:18px;font-weight:800;color:#34d399;">$75</div>
+          <div style="font-size:10px;color:#525252;">facebook · 5h ago</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lead 3 — claimed -->
+    <div class="card" style="padding:16px;opacity:0.6;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center;">
+            <span style="font-size:11px;padding:4px 10px;border-radius:6px;font-weight:800;text-transform:uppercase;" class="urgency-planned">Planned</span>
+            <span style="font-size:11px;padding:4px 10px;border-radius:6px;font-weight:800;text-transform:uppercase;" class="trade-roofing">Roofing</span>
+            <span style="font-size:11px;color:#525252;">📍 Dallas, TX</span>
+            <span class="status-pill s-claimed">🔒 claimed</span>
+          </div>
+          <p style="font-size:13px;color:#f5f5f5;margin:0;line-height:1.5;">Looking to replace roof before end of summer. House is 22 years old, a few shingles are curling.</p>
+          <div style="margin-top:10px;padding:10px;background:#0a0a0a;border-radius:8px;">
+            <p style="font-size:11px;color:#a3a3a3;margin:0 0 2px;">Claimed by Smith's Roofing · David Smith · (214) 555-0143</p>
+            <p style="font-size:10px;color:#525252;margin:0;">Contact: Sarah Johnson · (214) 555-9821 · delivered</p>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:18px;font-weight:800;color:#34d399;">$50</div>
+          <div style="font-size:10px;color:#525252;">nextdoor · yesterday</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lead 4 — qualified electrical -->
+    <div class="card" style="padding:16px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center;">
+            <span style="font-size:11px;padding:4px 10px;border-radius:6px;font-weight:800;text-transform:uppercase;" class="urgency-urgent">Urgent</span>
+            <span style="font-size:11px;padding:4px 10px;border-radius:6px;font-weight:800;text-transform:uppercase;" class="trade-electrical">Electrical</span>
+            <span style="font-size:11px;color:#525252;">📍 Nashville, TN</span>
+            <span class="status-pill s-qualified">qualified</span>
+            <span style="font-size:10px;color:#525252;">Score 8/10 · $100</span>
+          </div>
+          <p style="font-size:13px;color:#f5f5f5;margin:0;line-height:1.5;">Circuit breaker keeps tripping in kitchen, happens every time we use the microwave and oven at same time. Need electrician ASAP.</p>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:18px;font-weight:800;color:#34d399;">$100</div>
+          <div style="font-size:10px;color:#525252;">reddit · 3h ago</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ BUYERS PAGE ═══════════════ -->
+<div id="page-buyers" class="hidden" style="padding-top:72px;padding-bottom:40px;padding-left:24px;padding-right:24px;max-width:900px;margin:0 auto;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div><h1 style="font-size:22px;font-weight:800;margin:0;">Buyers</h1><p style="font-size:13px;color:#a3a3a3;margin:4px 0 0;">Trades professionals receiving leads</p></div>
+    <button class="btn-primary">+ Add Buyer</button>
+  </div>
+
+  <div style="display:grid;grid-template-columns:240px 1fr;gap:16px;">
+    <!-- Buyer list -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+
+      <div class="card" style="padding:12px;border-color:#065f46;background:rgba(5,150,105,0.07);cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <span style="font-size:13px;font-weight:700;">Acme HVAC LLC <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(120,90,15,0.4);color:#fbbf24;border:1px solid rgba(120,90,15,0.4);">🏅 Verified</span></span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:#064e3b;color:#34d399;">active</span>
+        </div>
+        <p style="font-size:11px;color:#525252;margin:3px 0;">mike@acmehvac.com</p>
+        <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;">
+          <span style="font-size:9px;padding:2px 6px;background:#1a1a1a;color:#a3a3a3;border-radius:4px;text-transform:uppercase;">hvac</span>
+        </div>
+        <p style="font-size:10px;color:#525252;margin-top:4px;">7 leads claimed · TACLB12345E</p>
+      </div>
+
+      <div class="card" style="padding:12px;cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <span style="font-size:13px;font-weight:700;">Smith's Roofing</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:#064e3b;color:#34d399;">active</span>
+        </div>
+        <p style="font-size:11px;color:#525252;margin:3px 0;">david@smithsroofing.com</p>
+        <div style="display:flex;gap:4px;margin-top:4px;">
+          <span style="font-size:9px;padding:2px 6px;background:#1a1a1a;color:#a3a3a3;border-radius:4px;text-transform:uppercase;">roofing</span>
+        </div>
+        <p style="font-size:10px;color:#525252;margin-top:4px;">3 leads claimed</p>
+      </div>
+
+      <div class="card" style="padding:12px;cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <span style="font-size:13px;font-weight:700;">Nashville Electric</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:#1a1a1a;color:#525252;">paused</span>
+        </div>
+        <p style="font-size:11px;color:#525252;margin:3px 0;">ops@nashvilleelectric.com</p>
+        <div style="display:flex;gap:4px;margin-top:4px;">
+          <span style="font-size:9px;padding:2px 6px;background:#1a1a1a;color:#a3a3a3;border-radius:4px;text-transform:uppercase;">electrical</span>
+        </div>
+        <p style="font-size:10px;color:#525252;margin-top:4px;">1 lead claimed</p>
+      </div>
+
+    </div>
+
+    <!-- Buyer detail form -->
+    <div class="card" style="padding:20px;">
+      <p style="font-size:13px;font-weight:700;margin:0 0 16px;">Edit Buyer</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Business Name *</label><input type="text" value="Acme HVAC LLC" style="width:100%;" /></div>
+        <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Contact Name</label><input type="text" value="Mike Smith" style="width:100%;" /></div>
+        <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Email *</label><input type="email" value="mike@acmehvac.com" style="width:100%;" /></div>
+        <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Phone</label><input type="tel" value="(512) 555-0192" style="width:100%;" /></div>
+        <div style="grid-column:span 2;"><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">License #</label><input type="text" value="TACLB12345E" style="width:100%;" /></div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:6px;">Service Types</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button style="padding:5px 12px;font-size:11px;border-radius:6px;border:1px solid #059669;background:rgba(5,150,105,0.2);color:#34d399;cursor:pointer;font-weight:700;">hvac</button>
+          <button style="padding:5px 12px;font-size:11px;border-radius:6px;border:1px solid #2a2a2a;background:#1a1a1a;color:#a3a3a3;cursor:pointer;">plumbing</button>
+          <button style="padding:5px 12px;font-size:11px;border-radius:6px;border:1px solid #2a2a2a;background:#1a1a1a;color:#a3a3a3;cursor:pointer;">electrical</button>
+          <button style="padding:5px 12px;font-size:11px;border-radius:6px;border:1px solid #2a2a2a;background:#1a1a1a;color:#a3a3a3;cursor:pointer;">roofing</button>
+          <button style="padding:5px 12px;font-size:11px;border-radius:6px;border:1px solid #2a2a2a;background:#1a1a1a;color:#a3a3a3;cursor:pointer;">general</button>
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Coverage Zip Codes</label>
+        <textarea rows="2" style="width:100%;resize:none;font-size:12px;">78701, 78702, 78703, 78704, 78705</textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">State</label><input type="text" value="TX" style="width:100%;" /></div>
+        <div style="display:flex;align-items:flex-end;padding-bottom:2px;"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#a3a3a3;"><input type="checkbox" checked style="accent-color:#059669;" /> Active (receives leads)</label></div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-primary">Update</button>
+        <button class="btn-ghost">+ New</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ JOIN PAGE ═══════════════ -->
+<div id="page-join" class="hidden" style="padding-top:72px;padding-bottom:40px;padding-left:16px;padding-right:16px;max-width:560px;margin:0 auto;">
+
+  <div style="text-align:center;margin-bottom:24px;">
+    <p style="font-size:11px;color:#34d399;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">LeadFlow</p>
+    <h1 style="font-size:26px;font-weight:800;margin:0 0 8px;">Get trades leads in your area</h1>
+    <p style="font-size:13px;color:#525252;line-height:1.6;max-width:360px;margin:0 auto;">We scan Reddit, HN, and Facebook neighborhood groups for homeowners actively looking for help. You get notified. You pay only for leads you want.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:24px;">
+    <div class="card" style="padding:12px;text-align:center;"><p style="font-size:20px;margin:0 0 4px;">📡</p><p style="font-size:11px;font-weight:700;margin:0 0 2px;">We scan</p><p style="font-size:10px;color:#525252;margin:0;">Reddit, HN, FB groups — 24/7</p></div>
+    <div class="card" style="padding:12px;text-align:center;"><p style="font-size:20px;margin:0 0 4px;">🤖</p><p style="font-size:11px;font-weight:700;margin:0 0 2px;">AI qualifies</p><p style="font-size:10px;color:#525252;margin:0;">Only real service requests</p></div>
+    <div class="card" style="padding:12px;text-align:center;"><p style="font-size:20px;margin:0 0 4px;">📧</p><p style="font-size:11px;font-weight:700;margin:0 0 2px;">You decide</p><p style="font-size:10px;color:#525252;margin:0;">Pay only for leads you want</p></div>
+  </div>
+
+  <div class="card" style="padding:20px;margin-bottom:14px;">
+    <p style="font-size:13px;font-weight:700;margin:0 0 14px;">Your business info</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Business Name *</label><input type="text" placeholder="Acme HVAC LLC" style="width:100%;box-sizing:border-box;" /></div>
+      <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Your Name *</label><input type="text" placeholder="Mike Smith" style="width:100%;box-sizing:border-box;" /></div>
+      <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Email *</label><input type="email" placeholder="mike@acmehvac.com" style="width:100%;box-sizing:border-box;" /></div>
+      <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Phone</label><input type="tel" placeholder="404-555-0192" style="width:100%;box-sizing:border-box;" /></div>
+      <div>
+        <label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Contractor License # *</label>
+        <input type="text" placeholder="e.g. TACLB12345E" style="width:100%;box-sizing:border-box;" />
+        <p style="font-size:10px;color:#525252;margin:4px 0 0;">Required. State-issued license number for your primary trade.</p>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:6px;">Services You Offer *</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button style="padding:10px 16px;font-size:13px;font-weight:700;border-radius:10px;border:1px solid #059669;background:rgba(5,150,105,0.2);color:#34d399;cursor:pointer;">HVAC</button>
+          <button style="padding:10px 16px;font-size:13px;font-weight:700;border-radius:10px;border:1px solid #2a2a2a;background:#0a0a0a;color:#a3a3a3;cursor:pointer;">Plumbing</button>
+          <button style="padding:10px 16px;font-size:13px;font-weight:700;border-radius:10px;border:1px solid #2a2a2a;background:#0a0a0a;color:#a3a3a3;cursor:pointer;">Electrical</button>
+          <button style="padding:10px 16px;font-size:13px;font-weight:700;border-radius:10px;border:1px solid #2a2a2a;background:#0a0a0a;color:#a3a3a3;cursor:pointer;">Roofing</button>
+          <button style="padding:10px 16px;font-size:13px;font-weight:700;border-radius:10px;border:1px solid #2a2a2a;background:#0a0a0a;color:#a3a3a3;cursor:pointer;">General Contractor</button>
+        </div>
+      </div>
+      <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Coverage State</label><input type="text" placeholder="TX" maxlength="2" style="width:100%;box-sizing:border-box;" /></div>
+      <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Coverage Zip Codes</label><input type="text" placeholder="78701, 78702, 78703" style="width:100%;box-sizing:border-box;" /></div>
+    </div>
+  </div>
+
+  <div class="card" style="padding:20px;margin-bottom:14px;">
+    <p style="font-size:13px;font-weight:700;margin:0 0 4px;">Before you join</p>
+    <p style="font-size:11px;color:#525252;margin:0 0 14px;">Read and accept each item.</p>
+    <label style="display:flex;align-items:flex-start;gap:16px;padding:12px 4px;border-radius:10px;cursor:pointer;margin-bottom:2px;">
+      <input type="checkbox" style="margin-top:2px;width:18px;height:18px;flex-shrink:0;accent-color:#059669;" />
+      <span style="font-size:13px;color:#a3a3a3;line-height:1.6;">I understand that LeadFlow provides <strong style="color:#f5f5f5;">lead signals</strong> — posts from real people seeking trades services. LeadFlow does not guarantee that any lead will result in a booked job or closed contract.</span>
+    </label>
+    <label style="display:flex;align-items:flex-start;gap:16px;padding:12px 4px;border-radius:10px;cursor:pointer;margin-bottom:2px;">
+      <input type="checkbox" style="margin-top:2px;width:18px;height:18px;flex-shrink:0;accent-color:#059669;" />
+      <span style="font-size:13px;color:#a3a3a3;line-height:1.6;">I understand that all lead purchases are <strong style="color:#f5f5f5;">final and non-refundable</strong>. Once I claim a lead and payment is confirmed, the contact details are delivered and the lead is removed from the marketplace.</span>
+    </label>
+    <label style="display:flex;align-items:flex-start;gap:16px;padding:12px 4px;border-radius:10px;cursor:pointer;">
+      <input type="checkbox" style="margin-top:2px;width:18px;height:18px;flex-shrink:0;accent-color:#059669;" />
+      <span style="font-size:13px;color:#a3a3a3;line-height:1.6;">I understand that I am responsible for my own outreach, licensing, and service delivery. LeadFlow is a <strong style="color:#f5f5f5;">lead marketplace only</strong> and is not a party to any transaction between me and a homeowner.</span>
+    </label>
+  </div>
+
+  <button class="btn-primary" style="width:100%;padding:14px;font-size:14px;border-radius:12px;margin-bottom:10px;">Join LeadFlow — Get notified of leads →</button>
+  <p style="text-align:center;font-size:11px;color:#525252;">Free to join. You only pay when you choose to claim a lead ($50–$150 per lead).</p>
+</div>
+
+<!-- ═══════════════ LOG LEAD MODAL ═══════════════ -->
+<div id="modal" class="modal-bg hidden">
+  <div class="card" style="padding:24px;width:100%;max-width:540px;border-color:#2a2a2a;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+      <div>
+        <h2 style="font-size:15px;font-weight:800;margin:0;">Log a manual lead</h2>
+        <p style="font-size:11px;color:#525252;margin:4px 0 0;">Paste a post from Nextdoor, Facebook, or anywhere else</p>
+      </div>
+      <button onclick="document.getElementById('modal').classList.add('hidden')" style="background:none;border:none;color:#525252;font-size:18px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:6px;">Platform</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="platform-btn active">nextdoor</button>
+        <button class="platform-btn" onclick="setPlatform(this)">facebook</button>
+        <button class="platform-btn" onclick="setPlatform(this)">reddit</button>
+        <button class="platform-btn" onclick="setPlatform(this)">hackernews</button>
+        <button class="platform-btn" onclick="setPlatform(this)">google</button>
+        <button class="platform-btn" onclick="setPlatform(this)">other</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Post text *</label>
+      <textarea rows="5" placeholder="Paste the full post here — the more context the better for AI qualification" style="width:100%;resize:none;box-sizing:border-box;"></textarea>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">City</label><input type="text" placeholder="Austin" style="width:100%;box-sizing:border-box;" /></div>
+      <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">State</label><input type="text" placeholder="TX" maxlength="2" style="width:100%;box-sizing:border-box;" /></div>
+      <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Author / handle</label><input type="text" placeholder="Jane M." style="width:100%;box-sizing:border-box;" /></div>
+      <div><label style="font-size:11px;color:#a3a3a3;display:block;margin-bottom:4px;">Source URL</label><input type="text" placeholder="nextdoor.com/..." style="width:100%;box-sizing:border-box;" /></div>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button onclick="document.getElementById('modal').classList.add('hidden')" class="btn-ghost" style="flex:1;">Cancel</button>
+      <button onclick="fakeQualify()" class="btn-primary" style="flex:1;">Qualify & Save</button>
+    </div>
+
+    <div id="qualify-result" class="hidden" style="margin-top:12px;padding:14px;background:rgba(5,150,105,0.15);border:1px solid rgba(5,150,105,0.4);border-radius:10px;">
+      <p style="font-size:13px;font-weight:700;color:#34d399;margin:0 0 6px;">✓ Qualified — 8/10</p>
+      <p style="font-size:13px;color:#f5f5f5;margin:0 0 6px;">Homeowner needs AC repair urgently due to extreme heat and elderly parent at home. Same-day need.</p>
+      <p style="font-size:11px;color:#34d399;margin:0;">Lead saved — check the Qualified tab on /leads</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showPage(name) {
+    ['dashboard','leads','buyers','join'].forEach(p => {
+      document.getElementById('page-'+p).classList.toggle('hidden', p !== name);
+    });
+    ['dashboard','leads','buyers'].forEach(n => {
+      const el = document.getElementById('nav-'+n);
+      if (el) el.style.color = n === name ? '#f5f5f5' : '#525252';
+    });
+  }
+
+  function toggleFb() {
+    const p = document.getElementById('fb-panel');
+    p.classList.toggle('hidden');
+  }
+
+  function fakeScan() {
+    document.getElementById('scan-result').classList.remove('hidden');
+  }
+
+  function setTab(el, name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function setPlatform(el) {
+    document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function fakeQualify() {
+    document.getElementById('qualify-result').classList.remove('hidden');
+  }
+</script>
+</body>
+</html>
