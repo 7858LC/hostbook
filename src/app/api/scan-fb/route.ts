@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { fbPostsToLeads } from "@/lib/scanner"
 import { qualifyBatch } from "@/lib/qualify"
 import { getLeads, saveLeads } from "@/lib/storage"
+import { isAdminRequest } from "@/lib/auth-server"
+import { checkDailyCap } from "@/lib/rateLimit"
 
 const APIFY_TOKEN = process.env.APIFY_API_TOKEN
 const ACTOR_ID = "apify/facebook-groups-scraper"
@@ -29,6 +31,9 @@ interface ApifyPost {
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await isAdminRequest())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!checkDailyCap("scan-fb", 10)) return NextResponse.json({ error: "Daily limit reached" }, { status: 429 })
+
   if (!APIFY_TOKEN) {
     return NextResponse.json({ error: "APIFY_API_TOKEN not set" }, { status: 503 })
   }

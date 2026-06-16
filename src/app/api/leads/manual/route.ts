@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from "next/server"
 import { nanoid } from "nanoid"
 import { qualifyLead } from "@/lib/qualify"
 import { saveLead } from "@/lib/storage"
+import { isAdminRequest } from "@/lib/auth-server"
+import { checkDailyCap } from "@/lib/rateLimit"
 import type { TradesLead } from "@/types/leads"
 
 export async function POST(req: NextRequest) {
+  if (!(await isAdminRequest())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!checkDailyCap("leads-manual", 200)) return NextResponse.json({ error: "Daily limit reached" }, { status: 429 })
+
   const { text, platform, sourceUrl, authorHandle, location, locationState } =
     await req.json() as {
       text: string
