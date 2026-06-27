@@ -28,6 +28,7 @@ export default function Nav() {
         <Link href="/" className="text-[#a3a3a3] hover:text-[#f5f5f5] transition-colors">Dashboard</Link>
         <Link href="/leads" className="text-[#a3a3a3] hover:text-[#f5f5f5] transition-colors">Leads</Link>
         <Link href="/buyers" className="text-[#a3a3a3] hover:text-[#f5f5f5] transition-colors">Buyers</Link>
+        <Link href="/admin" className="text-[#a3a3a3] hover:text-[#f5f5f5] transition-colors">Admin</Link>
       </div>
       <div className="ml-auto flex items-center gap-3">
         {user ? (

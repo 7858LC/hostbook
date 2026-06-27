@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createMiddlewareSupabase, ADMIN_EMAIL } from "@/lib/auth"
 
-const ADMIN_ROUTES = ["/", "/leads", "/buyers"]
+const ADMIN_ROUTES = ["/", "/leads", "/buyers", "/admin"]
 const BUYER_ROUTES = ["/portal"]
 const PUBLIC_ROUTES = ["/login", "/join", "/claim", "/intake", "/auth", "/tos", "/privacy"]
 
